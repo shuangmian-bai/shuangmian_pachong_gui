@@ -90,10 +90,13 @@ class InputButtonWidget(QWidget):
             datas[text] = path
         return datas
 
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QCheckBox
+
 class SubWindow(QWidget):
-    def __init__(self, parent=None, options=None):
+    def __init__(self, parent=None, options=None, checkbox_mode=False):
         super().__init__(parent)
         self.options = options if options is not None else []
+        self.checkbox_mode = checkbox_mode
         self.init_ui()
 
     def init_ui(self):
@@ -105,30 +108,46 @@ class SubWindow(QWidget):
         self.setFixedSize(900, 400)
 
         self.radio_buttons = []
+        self.check_boxes = []
         layout = QVBoxLayout()
         for option in self.options:
-            radio_button = QRadioButton(option, self)
-            layout.addWidget(radio_button)
-            self.radio_buttons.append(radio_button)
+            if self.checkbox_mode:
+                check_box = QCheckBox(option, self)
+                layout.addWidget(check_box)
+                self.check_boxes.append(check_box)
+            else:
+                radio_button = QRadioButton(option, self)
+                layout.addWidget(radio_button)
+                self.radio_buttons.append(radio_button)
 
         self.setLayout(layout)
 
     def update_options(self, options):
-        for radio_button in self.radio_buttons:
-            radio_button.deleteLater()
+        for widget in self.radio_buttons + self.check_boxes:
+            widget.deleteLater()
         self.radio_buttons.clear()
+        self.check_boxes.clear()
 
         layout = self.layout()
         for option in options:
-            radio_button = QRadioButton(option, self)
-            layout.addWidget(radio_button)
-            self.radio_buttons.append(radio_button)
+            if self.checkbox_mode:
+                check_box = QCheckBox(option, self)
+                layout.addWidget(check_box)
+                self.check_boxes.append(check_box)
+            else:
+                radio_button = QRadioButton(option, self)
+                layout.addWidget(radio_button)
+                self.radio_buttons.append(radio_button)
 
     def get_selected_option(self):
-        for radio_button in self.radio_buttons:
-            if radio_button.isChecked():
-                return radio_button.text()
-        return None
+        if self.checkbox_mode:
+            selected_options = [check_box.text() for check_box in self.check_boxes if check_box.isChecked()]
+            return selected_options
+        else:
+            for radio_button in self.radio_buttons:
+                if radio_button.isChecked():
+                    return radio_button.text()
+            return None
 
 
 class PagerWidget(QWidget):
@@ -222,7 +241,8 @@ class MainWindow(QMainWindow):
         input_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addLayout(input_layout)
 
-        self.sub_window = SubWindow(self)
+        # 初始化 sub_window，默认为单选框
+        self.sub_window = SubWindow(self, checkbox_mode=False)
         sub_layout = QVBoxLayout()
         sub_layout.addWidget(self.sub_window)
         sub_layout.setContentsMargins(50, 50, 50, 50)
@@ -248,11 +268,15 @@ class MainWindow(QMainWindow):
     def on_confirm_clicked(self):
         selected_option = self.sub_window.get_selected_option()
         if selected_option:
-            print(f"你点击了确认按钮，选中的数据是: {selected_option}")
-            print(self.datas[selected_option])
+            if isinstance(selected_option, list):
+                print(f"你点击了确认按钮，选中的数据是: {selected_option}")
+                for option in selected_option:
+                    print(self.datas[option])
+            else:
+                print(f"你点击了确认按钮，选中的数据是: {selected_option}")
+                print(self.datas[selected_option])
         else:
             QMessageBox.warning(self, "选择错误", "请选择一个选项")
-
 
 
 if __name__ == "__main__":

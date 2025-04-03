@@ -1,10 +1,14 @@
 import sys
+import requests
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QLineEdit, QHBoxLayout, QVBoxLayout, QMessageBox, QLabel
 from PyQt6.QtGui import QIcon, QPalette, QColor
+from bs4 import BeautifulSoup
+from PyQt6.QtWidgets import QRadioButton
 
 class InputButtonWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.main_window = parent
         self.init_ui()
 
     def init_ui(self):
@@ -25,12 +29,48 @@ class InputButtonWidget(QWidget):
         self.setLayout(layout)
 
     def on_button_clicked(self):
-        print("按钮被点击了！")
-        print("输入框内容:", self.input_box.text())
+        # 常量定义
+        BASE_URL = 'https://www.bnjxjd.com'
+        SEARCH_URL = f'{BASE_URL}/vodsearch.html'
+        cache = SEARCH_URL.replace('.html', '')
+        SEARCH_PAGE_URL_TEMPLATE = f'{cache}/page/{{}}/wd/{{}}.html'
+
+        data_api = SEARCH_PAGE_URL_TEMPLATE.format(1, self.input_box.text())
+        req = requests.get(data_api, headers={'User-Agent': 'Mozilla/5.0'})
+        soup = BeautifulSoup(req.text, 'html.parser')
+
+        # 提取最大页码
+        try:
+            page = soup.select('body > div:nth-child(1) > div > div > div.stui-pannel__ft > ul > li:nth-child(7) > a')[0]
+            page = page.get('href')
+            page = page.split('/')[3]
+            max_pages = int(page)
+        except (IndexError, ValueError):
+            max_pages = 1  # 如果无法提取页码，默认为1
+
+        soup = soup.select('body > div:nth-child(1) > div > div > div.stui-pannel__bd.clearfix > ul')[0].select('li')
+
+        datas = {}
+        for i in soup:
+            ti = i.select_one('.stui-vodlist__thumb.lazyload').get('title')
+            path = BASE_URL + i.select_one('a').get('href')
+            ty = i.select('.pic-text1.text-right')[0].text
+            ji = i.select('.pic-text.text-right')[0].text
+            # yy = i.select('.text.text-overflow.text-muted.hidden-xs')[0].text
+
+            text = f'{ti}__{ty}__{ji}'
+            print(text)
+            datas[text] = path
+
+        # 更新MainWindow中的datas变量
+        self.main_window.datas = datas
+        # 更新MainWindow中的最大页码
+        self.main_window.update_max_pages(max_pages)
 
 class SubWindow(QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, options=None):
         super().__init__(parent)
+        self.options = options if options is not None else []
         self.init_ui()
 
     def init_ui(self):
@@ -41,6 +81,31 @@ class SubWindow(QWidget):
 
         # 设置固定大小
         self.setFixedSize(900, 400)  # 根据需要调整宽度和高度
+
+        # 创建单选框
+        self.radio_buttons = []
+        layout = QVBoxLayout()
+        for option in self.options:
+            radio_button = QRadioButton(option, self)
+            layout.addWidget(radio_button)
+            self.radio_buttons.append(radio_button)
+
+        self.setLayout(layout)
+
+    def update_options(self, options):
+        # 清空现有的单选框
+        for radio_button in self.radio_buttons:
+            radio_button.deleteLater()
+        self.radio_buttons.clear()
+
+        # 创建新的单选框
+        layout = self.layout()
+        for option in options:
+            radio_button = QRadioButton(option, self)
+            layout.addWidget(radio_button)
+            self.radio_buttons.append(radio_button)
+
+
 
 class PagerWidget(QWidget):
     def __init__(self, parent=None, max_pages=1, button_width=30, button_height=30, button_spacing=10):
@@ -94,6 +159,7 @@ class PagerWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
+        self.datas = {}  # 初始化全局datas变量
         self.init_ui()
 
     def init_ui(self):
@@ -131,6 +197,14 @@ class MainWindow(QMainWindow):
         pager_x = window_width - pager_width - 20
         pager_y = window_height - pager_height - 20
         self.pager_widget.setGeometry(pager_x, pager_y, pager_width, pager_height)
+
+    def update_max_pages(self, max_pages):
+        self.pager_widget.set_max_pages(max_pages)
+        # 提取 datas 中的 text 内容
+        options = [text for text in self.datas.keys()]
+        # 更新 SubWindow 的选项
+        self.sub_window.update_options(options)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

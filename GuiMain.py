@@ -39,6 +39,9 @@ class SubWindow(QWidget):
         palette.setColor(QPalette.ColorRole.Window, QColor(220, 220, 220))
         self.setPalette(palette)
 
+        # 设置固定大小
+        self.setFixedSize(900, 400)  # 根据需要调整宽度和高度
+
 class PagerWidget(QWidget):
     def __init__(self, parent=None, max_pages=1, button_width=30, button_height=30, button_spacing=10):
         super().__init__(parent)

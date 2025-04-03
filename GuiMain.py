@@ -1,6 +1,7 @@
 import sys
 import requests
-from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QLineEdit, QHBoxLayout, QVBoxLayout, QMessageBox, QLabel
+from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QLineEdit, QHBoxLayout, QVBoxLayout, \
+    QMessageBox, QLabel, QCheckBox
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from bs4 import BeautifulSoup
 from PyQt6.QtWidgets import QRadioButton
@@ -90,8 +91,6 @@ class InputButtonWidget(QWidget):
             datas[text] = path
         return datas
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QRadioButton, QCheckBox
-
 class SubWindow(QWidget):
     def __init__(self, parent=None, options=None, checkbox_mode=False):
         super().__init__(parent)
@@ -148,7 +147,6 @@ class SubWindow(QWidget):
                 if radio_button.isChecked():
                     return radio_button.text()
             return None
-
 
 class PagerWidget(QWidget):
     page_changed = pyqtSignal(int)  # 添加信号
@@ -271,13 +269,19 @@ class MainWindow(QMainWindow):
             if isinstance(selected_option, list):
                 print(f"你点击了确认按钮，选中的数据是: {selected_option}")
                 for option in selected_option:
-                    print(self.datas[option])
+                    self.process_selected_option(option)
             else:
                 print(f"你点击了确认按钮，选中的数据是: {selected_option}")
-                print(self.datas[selected_option])
+                self.process_selected_option(selected_option)
         else:
             QMessageBox.warning(self, "选择错误", "请选择一个选项")
 
+    def process_selected_option(self, option):
+        try:
+            print(self.datas[option])
+        except KeyError:
+            print(f"选项 {option} 不存在于数据中")
+            QMessageBox.warning(self, "错误", f"选项 {option} 不存在于数据中")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

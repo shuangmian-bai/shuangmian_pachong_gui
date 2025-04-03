@@ -124,6 +124,12 @@ class SubWindow(QWidget):
             layout.addWidget(radio_button)
             self.radio_buttons.append(radio_button)
 
+    def get_selected_option(self):
+        for radio_button in self.radio_buttons:
+            if radio_button.isChecked():
+                return radio_button.text()
+        return None
+
 
 class PagerWidget(QWidget):
     page_changed = pyqtSignal(int)  # 添加信号
@@ -216,8 +222,6 @@ class MainWindow(QMainWindow):
         input_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addLayout(input_layout)
 
-
-
         self.sub_window = SubWindow(self)
         sub_layout = QVBoxLayout()
         sub_layout.addWidget(self.sub_window)
@@ -242,8 +246,13 @@ class MainWindow(QMainWindow):
         self.sub_window.update_options(options)
 
     def on_confirm_clicked(self):
-        # 在这里添加点击确定按钮后的逻辑
-        print('你点击了确认按钮')
+        selected_option = self.sub_window.get_selected_option()
+        if selected_option:
+            print(f"你点击了确认按钮，选中的数据是: {selected_option}")
+            print(self.datas[selected_option])
+        else:
+            QMessageBox.warning(self, "选择错误", "请选择一个选项")
+
 
 
 if __name__ == "__main__":

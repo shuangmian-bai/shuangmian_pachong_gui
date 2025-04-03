@@ -12,6 +12,7 @@ from PyQt6.QtCore import pyqtSignal
 class InputButtonWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.sj = []
         self.main_window = parent  # 父窗口引用
         self.current_page = 1  # 当前页码属性
         self.init_ui()  # 初始化UI
@@ -22,6 +23,7 @@ class InputButtonWidget(QWidget):
         self.input_box.setFixedSize(700, 30)  # 设置固定大小
         self.input_box.setPlaceholderText("请输入搜索关键词")  # 设置占位符文本
         self.input_box.setStyleSheet("border: 1px solid gray; border-radius: 5px;")  # 设置边框样式
+        self.max_pages = 1
 
         # 创建搜索按钮并绑定点击事件
         self.button = QPushButton("搜  索", self)
@@ -55,9 +57,12 @@ class InputButtonWidget(QWidget):
     # 数据获取和更新方法
     def fetch_and_update_data(self, search_query):
         try:
-            datas, max_pages = self.fetch_data(search_query, self.current_page)  # 获取数据和最大页数
+            if len(self.sj) < self.current_page:
+                datas, self.max_pages = self.fetch_data(search_query, self.current_page)  # 获取数据和最大页数
+                self.sj.append(datas)
+            datas = self.sj[self.current_page-1]
             self.main_window.datas = datas  # 更新主窗口的数据
-            self.main_window.update_max_pages(max_pages)  # 更新主窗口的最大页数
+            self.main_window.update_max_pages(self.max_pages)  # 更新主窗口的最大页数
         except Exception as e:
             QMessageBox.critical(self, "错误", f"数据获取失败: {str(e)}")  # 如果发生异常，弹出错误框
 
@@ -294,7 +299,7 @@ class MainWindow(QMainWindow):
                 req = requests.get(self.datas[selected_option], headers={'User-Agent': 'Mozilla/5.0'})  # 发送请求
                 soup = BeautifulSoup(req.text, 'html.parser')  # 解析HTML
                 sj = soup.select('.stui-content__playlist.clearfix')[0].select('a')  # 提取链接
-                cache = {i.text: 'https://www.bnjxjd.com' + i.get('href') for i in sj}  # 构造缓存数据
+                self.input_button_widget.sj = {i.text: 'https://www.bnjxjd.com' + i.get('href') for i in sj}  # 构造缓存数据
                 self.process_selected_option(selected_option)  # 处理选中的选项
         else:
             QMessageBox.warning(self, "选择错误", "请选择一个选项")  # 如果没有选中，弹出警告框

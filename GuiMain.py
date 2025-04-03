@@ -4,12 +4,16 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QWidget, QLi
 from PyQt6.QtGui import QIcon, QPalette, QColor
 from bs4 import BeautifulSoup
 from PyQt6.QtWidgets import QRadioButton
+from PyQt6.QtCore import pyqtSignal
 
 class InputButtonWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.main_window = parent
+        self.current_page = 1  # 添加当前页码属性
         self.init_ui()
+        # 连接信号在 MainWindow 初始化 pager_widget 后进行
+        # self.main_window.pager_widget.page_changed.connect(self.on_page_changed)  # 连接信号
 
     def init_ui(self):
         self.input_box = QLineEdit(self)
@@ -34,20 +38,29 @@ class InputButtonWidget(QWidget):
             QMessageBox.warning(self, "输入错误", "请输入搜索关键词")
             return
 
+        self.current_page = 1  # 重置页码
+        self.fetch_and_update_data(search_query)
+
+    def on_page_changed(self, page):
+        self.current_page = page
+        search_query = self.input_box.text()
+        self.fetch_and_update_data(search_query)
+
+    def fetch_and_update_data(self, search_query):
         try:
-            datas, max_pages = self.fetch_data(search_query)
+            datas, max_pages = self.fetch_data(search_query, self.current_page)
             self.main_window.datas = datas
             self.main_window.update_max_pages(max_pages)
         except Exception as e:
             QMessageBox.critical(self, "错误", f"数据获取失败: {str(e)}")
 
-    def fetch_data(self, search_query):
+    def fetch_data(self, search_query, page):
         BASE_URL = 'https://www.bnjxjd.com'
         SEARCH_URL = f'{BASE_URL}/vodsearch.html'
         cache = SEARCH_URL.replace('.html', '')
         SEARCH_PAGE_URL_TEMPLATE = f'{cache}/page/{{}}/wd/{{}}.html'
 
-        data_api = SEARCH_PAGE_URL_TEMPLATE.format(1, search_query)
+        data_api = SEARCH_PAGE_URL_TEMPLATE.format(page, search_query)
         response = requests.get(data_api, headers={'User-Agent': 'Mozilla/5.0'})
         response.raise_for_status()
         soup = BeautifulSoup(response.text, 'html.parser')
@@ -111,7 +124,10 @@ class SubWindow(QWidget):
             layout.addWidget(radio_button)
             self.radio_buttons.append(radio_button)
 
+
 class PagerWidget(QWidget):
+    page_changed = pyqtSignal(int)  # 添加信号
+
     def __init__(self, parent=None, max_pages=1, button_width=30, button_height=30, button_spacing=10):
         super().__init__(parent)
         self.max_pages = max_pages
@@ -145,12 +161,14 @@ class PagerWidget(QWidget):
         if self.current_page > 1:
             self.current_page -= 1
             self.update_page_label()
+            self.page_changed.emit(self.current_page)  # 发射信号
             print(f"上一页: 第{self.current_page}页")
 
     def on_next_clicked(self):
         if self.current_page < self.max_pages:
             self.current_page += 1
             self.update_page_label()
+            self.page_changed.emit(self.current_page)  # 发射信号
             print(f"下一页: 第{self.current_page}页")
 
     def update_page_label(self):
@@ -176,25 +194,12 @@ class MainWindow(QMainWindow):
         icon_path = "static/icon/shuangmian.ico"
         self.setWindowIcon(QIcon(icon_path))
 
-        self.input_button_widget = InputButtonWidget(self)
-        self.sub_window = SubWindow(self)
-
         container = QWidget()
         self.setCentralWidget(container)
 
         main_layout = QVBoxLayout()
-        input_layout = QHBoxLayout()
-        input_layout.addWidget(self.input_button_widget)
-        input_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addLayout(input_layout)
 
-        sub_layout = QVBoxLayout()
-        sub_layout.addWidget(self.sub_window)
-        sub_layout.setContentsMargins(50, 50, 50, 50)
-        main_layout.addLayout(sub_layout)
-
-        container.setLayout(main_layout)
-
+        # 初始化 pager_widget
         self.pager_widget = PagerWidget(container, max_pages=1)
         pager_width = 200
         pager_height = 30
@@ -202,10 +207,28 @@ class MainWindow(QMainWindow):
         pager_y = window_height - pager_height - 20
         self.pager_widget.setGeometry(pager_x, pager_y, pager_width, pager_height)
 
+        # 初始化 input_button_widget 并连接信号
+        self.input_button_widget = InputButtonWidget(self)
+        self.input_button_widget.main_window.pager_widget.page_changed.connect(self.input_button_widget.on_page_changed)
+
+        input_layout = QHBoxLayout()
+        input_layout.addWidget(self.input_button_widget)
+        input_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addLayout(input_layout)
+
+        self.sub_window = SubWindow(self)
+        sub_layout = QVBoxLayout()
+        sub_layout.addWidget(self.sub_window)
+        sub_layout.setContentsMargins(50, 50, 50, 50)
+        main_layout.addLayout(sub_layout)
+
+        container.setLayout(main_layout)
+
     def update_max_pages(self, max_pages):
         self.pager_widget.set_max_pages(max_pages)
         options = [text for text in self.datas.keys()]
         self.sub_window.update_options(options)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

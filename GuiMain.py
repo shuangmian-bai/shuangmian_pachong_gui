@@ -216,11 +216,23 @@ class MainWindow(QMainWindow):
         input_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addLayout(input_layout)
 
+
+
         self.sub_window = SubWindow(self)
         sub_layout = QVBoxLayout()
         sub_layout.addWidget(self.sub_window)
         sub_layout.setContentsMargins(50, 50, 50, 50)
         main_layout.addLayout(sub_layout)
+
+        # 添加确定按钮
+        self.confirm_button = QPushButton("确定", self)
+        self.confirm_button.setFixedSize(70, 40)
+        self.confirm_button.clicked.connect(self.on_confirm_clicked)  # 连接点击事件
+
+        confirm_layout = QHBoxLayout()
+        confirm_layout.addWidget(self.confirm_button)
+        confirm_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addLayout(confirm_layout)
 
         container.setLayout(main_layout)
 
@@ -228,6 +240,10 @@ class MainWindow(QMainWindow):
         self.pager_widget.set_max_pages(max_pages)
         options = [text for text in self.datas.keys()]
         self.sub_window.update_options(options)
+
+    def on_confirm_clicked(self):
+        # 在这里添加点击确定按钮后的逻辑
+        print('你点击了确认按钮')
 
 
 if __name__ == "__main__":

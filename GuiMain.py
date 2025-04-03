@@ -29,43 +29,53 @@ class InputButtonWidget(QWidget):
         self.setLayout(layout)
 
     def on_button_clicked(self):
-        # 常量定义
+        search_query = self.input_box.text()
+        if not search_query:
+            QMessageBox.warning(self, "输入错误", "请输入搜索关键词")
+            return
+
+        try:
+            datas, max_pages = self.fetch_data(search_query)
+            self.main_window.datas = datas
+            self.main_window.update_max_pages(max_pages)
+        except Exception as e:
+            QMessageBox.critical(self, "错误", f"数据获取失败: {str(e)}")
+
+    def fetch_data(self, search_query):
         BASE_URL = 'https://www.bnjxjd.com'
         SEARCH_URL = f'{BASE_URL}/vodsearch.html'
         cache = SEARCH_URL.replace('.html', '')
         SEARCH_PAGE_URL_TEMPLATE = f'{cache}/page/{{}}/wd/{{}}.html'
 
-        data_api = SEARCH_PAGE_URL_TEMPLATE.format(1, self.input_box.text())
-        req = requests.get(data_api, headers={'User-Agent': 'Mozilla/5.0'})
-        soup = BeautifulSoup(req.text, 'html.parser')
+        data_api = SEARCH_PAGE_URL_TEMPLATE.format(1, search_query)
+        response = requests.get(data_api, headers={'User-Agent': 'Mozilla/5.0'})
+        response.raise_for_status()
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-        # 提取最大页码
+        max_pages = self.extract_max_pages(soup)
+        datas = self.extract_datas(soup, BASE_URL)
+        return datas, max_pages
+
+    def extract_max_pages(self, soup):
         try:
             page = soup.select('body > div:nth-child(1) > div > div > div.stui-pannel__ft > ul > li:nth-child(7) > a')[0]
             page = page.get('href')
             page = page.split('/')[3]
-            max_pages = int(page)
+            return int(page)
         except (IndexError, ValueError):
-            max_pages = 1  # 如果无法提取页码，默认为1
+            return 1
 
-        soup = soup.select('body > div:nth-child(1) > div > div > div.stui-pannel__bd.clearfix > ul')[0].select('li')
-
+    def extract_datas(self, soup, base_url):
         datas = {}
-        for i in soup:
-            ti = i.select_one('.stui-vodlist__thumb.lazyload').get('title')
-            path = BASE_URL + i.select_one('a').get('href')
-            ty = i.select('.pic-text1.text-right')[0].text
-            ji = i.select('.pic-text.text-right')[0].text
-            # yy = i.select('.text.text-overflow.text-muted.hidden-xs')[0].text
+        for item in soup.select('body > div:nth-child(1) > div > div > div.stui-pannel__bd.clearfix > ul > li'):
+            ti = item.select_one('.stui-vodlist__thumb.lazyload').get('title')
+            path = base_url + item.select_one('a').get('href')
+            ty = item.select('.pic-text1.text-right')[0].text
+            ji = item.select('.pic-text.text-right')[0].text
 
             text = f'{ti}__{ty}__{ji}'
-            print(text)
             datas[text] = path
-
-        # 更新MainWindow中的datas变量
-        self.main_window.datas = datas
-        # 更新MainWindow中的最大页码
-        self.main_window.update_max_pages(max_pages)
+        return datas
 
 class SubWindow(QWidget):
     def __init__(self, parent=None, options=None):
@@ -79,10 +89,8 @@ class SubWindow(QWidget):
         palette.setColor(QPalette.ColorRole.Window, QColor(220, 220, 220))
         self.setPalette(palette)
 
-        # 设置固定大小
-        self.setFixedSize(900, 400)  # 根据需要调整宽度和高度
+        self.setFixedSize(900, 400)
 
-        # 创建单选框
         self.radio_buttons = []
         layout = QVBoxLayout()
         for option in self.options:
@@ -93,19 +101,15 @@ class SubWindow(QWidget):
         self.setLayout(layout)
 
     def update_options(self, options):
-        # 清空现有的单选框
         for radio_button in self.radio_buttons:
             radio_button.deleteLater()
         self.radio_buttons.clear()
 
-        # 创建新的单选框
         layout = self.layout()
         for option in options:
             radio_button = QRadioButton(option, self)
             layout.addWidget(radio_button)
             self.radio_buttons.append(radio_button)
-
-
 
 class PagerWidget(QWidget):
     def __init__(self, parent=None, max_pages=1, button_width=30, button_height=30, button_spacing=10):
@@ -159,7 +163,7 @@ class PagerWidget(QWidget):
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.datas = {}  # 初始化全局datas变量
+        self.datas = {}
         self.init_ui()
 
     def init_ui(self):
@@ -200,11 +204,8 @@ class MainWindow(QMainWindow):
 
     def update_max_pages(self, max_pages):
         self.pager_widget.set_max_pages(max_pages)
-        # 提取 datas 中的 text 内容
         options = [text for text in self.datas.keys()]
-        # 更新 SubWindow 的选项
         self.sub_window.update_options(options)
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

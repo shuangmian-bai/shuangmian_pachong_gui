@@ -272,6 +272,11 @@ class MainWindow(QMainWindow):
                     self.process_selected_option(option)
             else:
                 print(f"你点击了确认按钮，选中的数据是: {selected_option}")
+                self.datas = {selected_option: self.datas[selected_option]}
+                req = requests.get(self.datas[selected_option], headers={'User-Agent': 'Mozilla/5.0'})
+                soup = BeautifulSoup(req.text, 'html.parser')
+                sj = soup.select('.stui-content__playlist.clearfix')[0].select('a')
+                cache = {i.text:'https://www.bnjxjd.com'+i.get('href') for i in sj}
                 self.process_selected_option(selected_option)
         else:
             QMessageBox.warning(self, "选择错误", "请选择一个选项")

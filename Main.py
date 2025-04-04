@@ -2,6 +2,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication
 from GuiMain import MovieCrawlerGUI
+from get_data import MovieScraper
 
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):

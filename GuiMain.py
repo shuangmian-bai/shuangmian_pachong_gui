@@ -89,6 +89,8 @@ class MovieCrawlerGUI(QMainWindow):
             border: none;
             padding: 10px;
         """)
+        # 设置 QTextEdit 的固定高度
+        self.result_text.setFixedHeight(10)  # 调整为合适的高度
 
         # 按钮区域
         self.button_frame = QFrame(self)

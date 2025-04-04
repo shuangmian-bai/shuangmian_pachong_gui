@@ -1,5 +1,5 @@
-# Main.py
 import sys
+import pandas as pd
 from PyQt6.QtWidgets import QApplication
 from GuiMain import MovieCrawlerGUI
 from get_data import MovieScraper
@@ -9,6 +9,36 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def __init__(self, button_data, is_radio=True):
         super().__init__(button_data, is_radio)
         self.is_radio = is_radio
+        self.movie_scraper = MovieScraper()
+        self.last_query = None  # 添加一个变量来存储上次的查询关键词
+        self.results = None  # 添加一个变量来存储搜索结果
+
+    def on_search_clicked(self):
+        print("自定义：搜索按钮被点击")
+        query = self.search_input.text()
+        print(f"搜索关键词: {query}")
+
+        # 检查输入是否为空或与上次输入相同
+        if not query or query == self.last_query:
+            print("输入为空或与上次输入相同，不做处理")
+            return
+
+        # 更新上次查询关键词
+        self.last_query = query
+
+        # 调用 MovieScraper 的 search_movies 方法进行搜索
+        self.results = self.movie_scraper.search_movies(query)  # 将结果存储在实例变量中
+        datas = pd.Series(self.results)
+        cache = datas.index.to_list().copy()
+        print(cache)
+
+        # 将 cache 转换成二维列表，每个子列表包含 10 个元素
+        n = 10
+        cache_2d = [cache[i:i + n] for i in range(0, len(cache), n)]
+        print(cache_2d)
+
+        # 更新按钮数据
+        self.update_button_data(cache_2d)
 
     def on_confirm_clicked(self):
         # 自定义确定按钮的逻辑
@@ -44,7 +74,7 @@ if __name__ == "__main__":
 
     # 定义按钮数据
     button_data = [
-        ["按钮1", "按钮2", "按钮3", "按钮4", "按钮5"],
+        []
     ]
 
     # 创建窗口实例

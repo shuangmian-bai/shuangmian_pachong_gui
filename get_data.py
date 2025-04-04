@@ -26,16 +26,15 @@ class MovieScraper:
                 page = 1
 
             url2_list = [self.search_page_url_template.format(i, query) for i in range(1, int(page) + 1)]
-            print(url2_list)
 
             # 使用多线程请求 url2_list
             with ThreadPoolExecutor(max_workers=5) as executor:
                 futures = [executor.submit(self.fetch_url, url) for url in url2_list]
-                results = []
+                results = {}
                 for future in futures:
                     try:
                         result = future.result()
-                        results.append(self.process_result(result))
+                        results.update(self.process_result(result))
                     except Exception as e:
                         print(f"Error processing URL: {e}")
 
@@ -43,7 +42,7 @@ class MovieScraper:
 
         except requests.RequestException as e:
             print(f"Request failed: {e}")
-            return []
+            return {}
 
     def fetch_url(self, url):
         try:
@@ -86,4 +85,3 @@ class MovieScraper:
 if __name__ == '__main__':
     scraper = MovieScraper()
     datas = scraper.search_movies('哪吒')
-    print(datas)

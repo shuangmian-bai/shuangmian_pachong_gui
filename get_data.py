@@ -81,7 +81,33 @@ class MovieScraper:
             print(f"Error processing result: {e}")
             return {}
 
+    def get_ji(self, url):
+        try:
+            req = requests.get(url, headers=self.headers)
+            req.raise_for_status()
+            soup = BeautifulSoup(req.text, 'html.parser')
+
+            # 假设集数信息在 class 为 'stui-content__playlist' 的 div 中
+            playlist = soup.select_one('.stui-content__playlist.clearfix')
+            episodes = playlist.select('a')
+
+            episode_data = {}
+            for episode in episodes:
+                path = self.base_url + episode.get('href')
+                name = episode.text
+                episode_data[name] = path
+            return episode_data
+
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
+            return {}
+        except Exception as e:
+            print(f"Error processing episode data: {e}")
+            return {}
 
 if __name__ == '__main__':
     scraper = MovieScraper()
-    datas = scraper.search_movies('哪吒')
+    # datas = scraper.search_movies('哪吒')
+    # 示例调用 get_ji 方法
+    episode_info = scraper.get_ji('https://www.bnjxjd.com/xyz/15942.html')
+    print(episode_info)

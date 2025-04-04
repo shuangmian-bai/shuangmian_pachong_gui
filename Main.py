@@ -64,6 +64,8 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def handle_selected_radio_button(self, button):
         # 处理单选按钮的逻辑
         print(f"处理单选按钮: {button}")
+        url1 = self.results[button]
+        print(url1)
         # 在这里添加具体的处理逻辑
 
     def handle_selected_check_buttons(self, buttons_list):

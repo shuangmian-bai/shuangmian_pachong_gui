@@ -28,6 +28,10 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
         # 调用 MovieScraper 的 search_movies 方法进行搜索
         self.results = self.movie_scraper.search_movies(query)  # 将结果存储在实例变量中
+        self.process_results_and_update_ui()
+
+    def process_results_and_update_ui(self):
+        # 处理结果并更新UI的逻辑
         datas = pd.Series(self.results)
         cache = datas.index.to_list().copy()
         print(cache)

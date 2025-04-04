@@ -225,7 +225,9 @@ class MovieCrawlerGUI(QMainWindow):
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")
 
-    def update_button_data(self, new_button_data):
+    def update_button_data(self, new_button_data,is_radio):
+        print(new_button_data)
+        self.is_radio = is_radio
         self.button_data = new_button_data
         self.total_pages = len(new_button_data)
         self.current_page = 1

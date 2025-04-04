@@ -28,9 +28,9 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
         # 调用 MovieScraper 的 search_movies 方法进行搜索
         self.results = self.movie_scraper.search_movies(query)  # 将结果存储在实例变量中
-        self.process_results_and_update_ui()
+        self.process_results_and_update_ui(True)
 
-    def process_results_and_update_ui(self):
+    def process_results_and_update_ui(self,is_radio):
         # 处理结果并更新UI的逻辑
         datas = pd.Series(self.results)
         cache = datas.index.to_list().copy()
@@ -39,10 +39,9 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 将 cache 转换成二维列表，每个子列表包含 10 个元素
         n = 10
         cache_2d = [cache[i:i + n] for i in range(0, len(cache), n)]
-        print(cache_2d)
 
         # 更新按钮数据
-        self.update_button_data(cache_2d)
+        self.update_button_data(cache_2d,is_radio)
 
     def on_confirm_clicked(self):
         # 自定义确定按钮的逻辑
@@ -61,11 +60,16 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             print(f"选中的多选按钮列表: {selected_buttons}")
             self.handle_selected_check_buttons(selected_buttons)
 
+        # 清除上次输入的缓存
+        self.last_query = None
+
     def handle_selected_radio_button(self, button):
         # 处理单选按钮的逻辑
         print(f"处理单选按钮: {button}")
         url1 = self.results[button]
-        print(url1)
+        datas = self.movie_scraper.get_ji(url1)
+        self.results = datas
+        self.process_results_and_update_ui(False)
         # 在这里添加具体的处理逻辑
 
     def handle_selected_check_buttons(self, buttons_list):

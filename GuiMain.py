@@ -89,13 +89,17 @@ class MovieCrawlerGUI(QMainWindow):
             border: none;
             padding: 10px;
         """)
-        result_layout.addWidget(self.result_text)
 
         # 按钮区域
         self.button_frame = QFrame(self)
         self.button_layout = QVBoxLayout(self.button_frame)
         self.update_buttons()
-        result_layout.addWidget(self.button_frame)
+
+        # 将按钮区域添加到 result_layout 中，并设置对齐方式为顶部对齐
+        result_layout.addWidget(self.button_frame, alignment=Qt.AlignmentFlag.AlignTop)
+
+        # 将结果文本区域添加到 result_layout 中
+        result_layout.addWidget(self.result_text)
 
         # 分页导航
         pagination_layout = QHBoxLayout()
@@ -218,6 +222,13 @@ class MovieCrawlerGUI(QMainWindow):
 
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")
+
+    def update_button_data(self, new_button_data):
+        self.button_data = new_button_data
+        self.total_pages = len(new_button_data)
+        self.current_page = 1
+        self.update_page_info()
+        self.update_buttons()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

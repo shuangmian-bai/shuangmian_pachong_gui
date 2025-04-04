@@ -1,56 +1,53 @@
+# Main.py
 import sys
 from PyQt6.QtWidgets import QApplication
-from GuiMain import MovieCrawlerGUI  # 假设 GuiMain.py 在同一目录下
+from GuiMain import MovieCrawlerGUI
+
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
-    def __init__(self):
-        super().__init__()
-
-    def on_search_clicked(self):
-        super().on_search_clicked()
-        query = self.search_input.text()
-        if query:
-            # 在这里添加搜索逻辑，例如调用爬虫接口获取数据
-            search_results = self.perform_search(query)
-            self.result_text.setPlainText(search_results)
-        else:
-            self.result_text.setPlainText("请输入有效的搜索关键词")
-
-    def perform_search(self, query):
-        # 这里可以添加具体的搜索逻辑，例如调用API获取数据
-        # 示例：模拟搜索结果
-        return f"搜索结果：\n- 影视1\n- 影视2\n- 影视3"
-
-    def on_prev_clicked(self):
-        super().on_prev_clicked()
-        # 在这里添加加载上一页数据的逻辑
-        if self.current_page > 1:
-            self.current_page -= 1
-            self.update_page_info()
-            # 示例：更新显示结果
-            self.result_text.setPlainText(f"上一页数据: 页码 {self.current_page}")
-
-    def on_next_clicked(self):
-        super().on_next_clicked()
-        # 在这里添加加载下一页数据的逻辑
-        if self.current_page < self.total_pages:
-            self.current_page += 1
-            self.update_page_info()
-            # 示例：更新显示结果
-            self.result_text.setPlainText(f"下一页数据: 页码 {self.current_page}")
+    def __init__(self, button_data, is_radio=True):
+        super().__init__(button_data, is_radio)
+        self.is_radio = is_radio
 
     def on_confirm_clicked(self):
-        super().on_confirm_clicked()
-        # 在这里添加确定按钮的逻辑
-        self.result_text.setPlainText("确定按钮被点击")
+        # 自定义确定按钮的逻辑
+        print("自定义：确定按钮被点击")
+        selected_buttons = [button.text() for button in self.buttons if button.isChecked()]
 
-    def on_settings_clicked(self):
-        super().on_settings_clicked()
-        # 在这里添加设置按钮的逻辑
-        self.result_text.setPlainText("设置按钮被点击")
+        if not selected_buttons:
+            print("没有选中的按钮，不做处理")
+            return  # 如果没有选中任何按钮，则直接返回
+
+        if self.is_radio:
+            selected_button = selected_buttons[0]
+            print(f"选中的单选按钮: {selected_button}")
+            self.handle_selected_radio_button(selected_button)
+        else:
+            print(f"选中的多选按钮列表: {selected_buttons}")
+            self.handle_selected_check_buttons(selected_buttons)
+
+    def handle_selected_radio_button(self, button):
+        # 处理单选按钮的逻辑
+        print(f"处理单选按钮: {button}")
+        # 在这里添加具体的处理逻辑
+
+    def handle_selected_check_buttons(self, buttons_list):
+        # 处理多选按钮的逻辑
+        for button in buttons_list:
+            print(f"处理多选按钮: {button}")
+        # 在这里添加具体的处理逻辑
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = CustomMovieCrawlerGUI()
+
+    # 定义按钮数据
+    button_data = [
+        ["按钮1", "按钮2", "按钮3", "按钮4", "按钮5"],
+    ]
+
+    # 创建窗口实例
+    window = CustomMovieCrawlerGUI(button_data, is_radio=True)
     window.show()
+
     sys.exit(app.exec())

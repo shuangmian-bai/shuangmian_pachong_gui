@@ -1,13 +1,17 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QFrame
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFont, QIcon, QColor
+from PyQt6.QtGui import QIcon
 
 class MovieCrawlerGUI(QMainWindow):
-    def __init__(self):
+    def __init__(self, button_data, is_radio=True):
         super().__init__()
         self.current_page = 1
-        self.total_pages = 1
+        self.total_pages = len(button_data)
+        self.button_data = button_data
+        self.is_radio = is_radio
+        self.button_group = QButtonGroup() if is_radio else None
+        self.buttons = []
         self.init_ui()
 
     def init_ui(self):
@@ -75,6 +79,8 @@ class MovieCrawlerGUI(QMainWindow):
             padding: 10px;
         """)
         result_layout = QVBoxLayout(result_frame)
+
+        # 结果文本区域
         self.result_text = QTextEdit(self)
         self.result_text.setReadOnly(True)
         self.result_text.setStyleSheet("""
@@ -84,7 +90,12 @@ class MovieCrawlerGUI(QMainWindow):
             padding: 10px;
         """)
         result_layout.addWidget(self.result_text)
-        main_layout.addWidget(result_frame)
+
+        # 按钮区域
+        self.button_frame = QFrame(self)
+        self.button_layout = QVBoxLayout(self.button_frame)
+        self.update_buttons()
+        result_layout.addWidget(self.button_frame)
 
         # 分页导航
         pagination_layout = QHBoxLayout()
@@ -122,7 +133,10 @@ class MovieCrawlerGUI(QMainWindow):
         pagination_layout.addWidget(self.prev_button)
         pagination_layout.addWidget(self.page_info_label)
         pagination_layout.addWidget(self.next_button)
-        main_layout.addLayout(pagination_layout)
+        result_layout.addLayout(pagination_layout)
+
+        # 将结果显示区域添加到主布局
+        main_layout.addWidget(result_frame)
 
         # 确定按钮
         confirm_button = QPushButton("确定", self)
@@ -154,6 +168,26 @@ class MovieCrawlerGUI(QMainWindow):
         settings_button.clicked.connect(self.on_settings_clicked)
         main_layout.addWidget(settings_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
+    def update_buttons(self):
+        # 清空按钮区域
+        for button in self.buttons:
+            button.deleteLater()
+        self.buttons.clear()
+
+        # 获取当前页的数据
+        current_data = self.button_data[self.current_page - 1]
+
+        # 创建按钮
+        for text in current_data:
+            if self.is_radio:
+                button = QRadioButton(text, self)
+            else:
+                button = QCheckBox(text, self)
+            self.buttons.append(button)
+            self.button_layout.addWidget(button)
+            if self.is_radio:
+                self.button_group.addButton(button)
+
     def on_search_clicked(self):
         print("搜索按钮被点击")
         query = self.search_input.text()
@@ -165,14 +199,14 @@ class MovieCrawlerGUI(QMainWindow):
             self.current_page -= 1
             print(f"上一页按钮被点击, 当前页码: {self.current_page}")
             self.update_page_info()
-            # 这里可以添加加载上一页数据的逻辑
+            self.update_buttons()
 
     def on_next_clicked(self):
         if self.current_page < self.total_pages:
             self.current_page += 1
             print(f"下一页按钮被点击, 当前页码: {self.current_page}")
             self.update_page_info()
-            # 这里可以添加加载下一页数据的逻辑
+            self.update_buttons()
 
     def on_confirm_clicked(self):
         print("确定按钮被点击")
@@ -187,6 +221,11 @@ class MovieCrawlerGUI(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    window = MovieCrawlerGUI()
+    button_data = [
+        ["按钮1", "按钮2", "按钮3"],
+        ["按钮4", "按钮5", "按钮6"],
+        ["按钮7", "按钮8", "按钮9"]
+    ]
+    window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())

@@ -1,7 +1,9 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
+    QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
+
 
 class MovieCrawlerGUI(QMainWindow):
     def __init__(self, button_data, is_radio=True):
@@ -12,6 +14,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.is_radio = is_radio
         self.button_group = QButtonGroup() if is_radio else None
         self.buttons = []
+        self.selected_states = {}  # 用于保存按钮的选择状态
         self.init_ui()
 
     def init_ui(self):
@@ -174,7 +177,7 @@ class MovieCrawlerGUI(QMainWindow):
         settings_button.clicked.connect(self.on_settings_clicked)
         main_layout.addWidget(settings_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
-    def update_buttons(self):
+    def update_buttons(self, selected_states=None):
         # 清空按钮区域
         for button in self.buttons:
             button.deleteLater()
@@ -194,6 +197,11 @@ class MovieCrawlerGUI(QMainWindow):
             if self.is_radio:
                 self.button_group.addButton(button)
 
+        # 恢复选择状态
+        if selected_states is not None:
+            for button, state in zip(self.buttons, selected_states):
+                button.setChecked(state)
+
     def on_search_clicked(self):
         print("搜索按钮被点击")
         query = self.search_input.text()
@@ -202,20 +210,37 @@ class MovieCrawlerGUI(QMainWindow):
 
     def on_prev_clicked(self):
         if self.current_page > 1:
+            # 保存当前按钮的选择状态
+            selected_states = [button.isChecked() for button in self.buttons]
+            self.selected_states[self.current_page] = selected_states
+
             self.current_page -= 1
             print(f"上一页按钮被点击, 当前页码: {self.current_page}")
             self.update_page_info()
-            self.update_buttons()
+            self.update_buttons(self.selected_states.get(self.current_page, []))
 
     def on_next_clicked(self):
         if self.current_page < self.total_pages:
+            # 保存当前按钮的选择状态
+            selected_states = [button.isChecked() for button in self.buttons]
+            self.selected_states[self.current_page] = selected_states
+
             self.current_page += 1
             print(f"下一页按钮被点击, 当前页码: {self.current_page}")
             self.update_page_info()
-            self.update_buttons()
+            self.update_buttons(self.selected_states.get(self.current_page, []))
 
     def on_confirm_clicked(self):
         print("确定按钮被点击")
+        # 收集所有页的选中状态
+        all_selected_buttons = []
+        for page, states in self.selected_states.items():
+            current_data = self.button_data[page - 1]
+            for text, state in zip(current_data, states):
+                if state:
+                    all_selected_buttons.append(text)
+
+        print(f"选中的按钮列表: {all_selected_buttons}")
         # 这里可以添加确定按钮的逻辑
 
     def on_settings_clicked(self):
@@ -225,7 +250,7 @@ class MovieCrawlerGUI(QMainWindow):
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")
 
-    def update_button_data(self, new_button_data,is_radio):
+    def update_button_data(self, new_button_data, is_radio):
         print(new_button_data)
         self.is_radio = is_radio
         self.button_data = new_button_data
@@ -233,6 +258,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.current_page = 1
         self.update_page_info()
         self.update_buttons()
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

@@ -1,7 +1,6 @@
-# set_ini.py
 import os
 from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLineEdit, QFileDialog, QLabel, QHBoxLayout
-from PyQt6.QtGui import QIcon, QFont
+from PyQt6.QtGui import QIcon, QFont, QIntValidator
 from configparser import ConfigParser, NoSectionError
 
 class SettingDialog(QDialog):
@@ -74,6 +73,11 @@ class SettingDialog(QDialog):
             border: 1px solid #ccc;
             border-radius: 5px;
         """)
+
+        # 添加验证器，限制只能输入大于0的整数
+        validator = QIntValidator(1, 9999, self)  # 你可以根据需要调整范围
+        self.n_input.setValidator(validator)
+
         n_layout.addWidget(self.n_label)
         n_layout.addWidget(self.n_input)
         self.layout.addLayout(n_layout)
@@ -124,12 +128,25 @@ class SettingDialog(QDialog):
         """选择下载路径"""
         dow_path = QFileDialog.getExistingDirectory(self, "选择下载路径")
         if dow_path:
+            # 解析非法字符
+            pass
             self.dow_path_input.setText(dow_path)
 
     def save_settings(self):
         """保存设置到 ini 文件"""
         dow_path = self.dow_path_input.text()
         n = self.n_input.text()
+
+        # 处理路径字符串
+        illegal_chars = [':', '*', '?', '"', '<', '>', '|']
+        for char in illegal_chars:
+            dow_path = dow_path.replace(char, '_')  # 替换为单下划线更简洁
+        dow_path = dow_path.replace('\\', '/')  # 统一为正斜杠
+        dow_path = '/'.join(filter(None, dow_path.split('/')))  # 去除多余斜杠
+
+        # 确保路径末尾有且仅有一个斜杠
+        if not dow_path.endswith('/'):
+            dow_path += '/'
 
         # 更新 ini 文件
         static_folder = 'static'
@@ -138,11 +155,15 @@ class SettingDialog(QDialog):
         self.config.set('Settings', 'n', n)
 
         # 写入文件
-        with open(ini_file_path, 'w', encoding='utf-8') as configfile:  # 指定编码为 utf-8
-            self.config.write(configfile)
+        try:
+            with open(ini_file_path, 'w', encoding='utf-8') as configfile:
+                self.config.write(configfile)
+            print("设置已保存！")
+        except IOError as e:
+            print(f"文件写入失败: {e}")
 
-        print("设置已保存！")
         self.accept()  # 关闭弹窗
+
 
 if __name__ == "__main__":
     app = QApplication([])

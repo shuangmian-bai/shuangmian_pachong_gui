@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
+from dow_mp4 import dow_mp4  # 导入 dow_mp4 函数
+from get_m3u8 import get_m3u8  # 导入 get_m3u8 函数
+from get_ts_list import get_ts_list  # 导入 get_ts_list 函数
 
 class MovieScraper:
     def __init__(self):
@@ -105,9 +108,32 @@ class MovieScraper:
             print(f"Error processing episode data: {e}")
             return {}
 
+    def get_m3u8(self, url):
+        # 调用 get_m3u8.py 中的 get_m3u8 函数
+        return get_m3u8(self.headers, url)
+
+    def get_ts_list(self, m3u8):
+        # 调用 get_ts_list.py 中的 get_ts_list 函数
+        return get_ts_list(self.headers, m3u8)
+
+    def dow_mp4(self, ts_list, path, n):
+        # 调用 dow_mp4.py 中的 dow_mp4 函数
+        dow_mp4(ts_list, path, n)
+
+
 if __name__ == '__main__':
     scraper = MovieScraper()
-    # datas = scraper.search_movies('哪吒')
     # 示例调用 get_ji 方法
-    episode_info = scraper.get_ji('https://www.bnjxjd.com/xyz/15942.html')
-    print(episode_info)
+    # episode_info = scraper.get_ji('https://www.bnjxjd.com/xyz/15942.html')
+    # print(episode_info)
+
+    # 示例调用 get_m3u8 方法
+    m3u8_url = scraper.get_m3u8('https://www.bnjxjd.com/play/15942-2-1.html')
+
+    # # 示例调用 get_ts_list 方法
+    ts_list = scraper.get_ts_list(m3u8_url)
+    for i in ts_list:
+        print(i)
+    #
+    # # 示例调用 dow_mp4 方法
+    # scraper.dow_mp4(ts_list, 'output.mp4', 10)

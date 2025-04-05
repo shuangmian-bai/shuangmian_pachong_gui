@@ -1,6 +1,4 @@
-# search_popup.py
-
-from PyQt6.QtWidgets import QMessageBox, QApplication, QWidget
+from PyQt6.QtWidgets import QMessageBox, QApplication, QWidget, QPushButton, QVBoxLayout
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon  # 导入 QIcon 模块
 
@@ -29,9 +27,23 @@ class SearchPopup:
 def main():
     app = QApplication([])
     window = QWidget()
+    window.setWindowTitle("主窗口")
+    window.setGeometry(100, 100, 300, 200)
+
+    layout = QVBoxLayout()
+    window.setLayout(layout)
+
     search_popup = SearchPopup(window)
-    search_popup.show_popup()
-    QTimer.singleShot(2000, search_popup.close_popup)  # 模拟2秒后关闭弹窗
+
+    show_button = QPushButton("显示弹窗")
+    show_button.clicked.connect(search_popup.show_popup)
+    layout.addWidget(show_button)
+
+    close_button = QPushButton("关闭弹窗")
+    close_button.clicked.connect(search_popup.close_popup)
+    layout.addWidget(close_button)
+
+    window.show()
     app.exec()
 
 if __name__ == "__main__":

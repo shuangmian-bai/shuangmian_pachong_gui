@@ -1,3 +1,4 @@
+# set_ini.py
 import os
 from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLineEdit, QFileDialog, QLabel, QHBoxLayout
 from PyQt6.QtGui import QIcon, QFont
@@ -96,7 +97,11 @@ class SettingDialog(QDialog):
 
         # 初始化配置
         self.config = ConfigParser()
-        self.load_settings()
+        self.settings = self.load_settings()
+
+        # 将当前设置显示在输入框中
+        self.dow_path_input.setText(self.settings['dow_path'])
+        self.n_input.setText(self.settings['n'])
 
     def load_settings(self):
         """加载设置"""
@@ -104,14 +109,16 @@ class SettingDialog(QDialog):
         ini_file_path = os.path.join(static_folder, 'Settings.ini')
 
         if not os.path.exists(ini_file_path):
-            with open(ini_file_path, 'w') as configfile:
+            with open(ini_file_path, 'w', encoding='utf-8') as configfile:
                 configfile.write("[Settings]\ndow_path=./下载/\nn=150\n")
 
-        self.config.read(ini_file_path)
+        self.config.read(ini_file_path, encoding='utf-8')  # 指定编码为 utf-8
 
         # 设置默认值
-        self.dow_path_input.setText(self.config.get('Settings', 'dow_path'))
-        self.n_input.setText(self.config.get('Settings', 'n'))
+        dow_path = self.config.get('Settings', 'dow_path', fallback='./下载/')
+        n = self.config.get('Settings', 'n', fallback='150')
+
+        return {'dow_path': dow_path, 'n': n}
 
     def select_dow_path(self):
         """选择下载路径"""
@@ -131,7 +138,7 @@ class SettingDialog(QDialog):
         self.config.set('Settings', 'n', n)
 
         # 写入文件
-        with open(ini_file_path, 'w') as configfile:
+        with open(ini_file_path, 'w', encoding='utf-8') as configfile:  # 指定编码为 utf-8
             self.config.write(configfile)
 
         print("设置已保存！")

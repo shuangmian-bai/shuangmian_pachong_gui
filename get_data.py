@@ -136,4 +136,4 @@ if __name__ == '__main__':
         print(i)
     #
     # # 示例调用 dow_mp4 方法
-    # scraper.dow_mp4(ts_list, 'output.mp4', 10)
+    scraper.dow_mp4(ts_list, 'output.mp4', 200)

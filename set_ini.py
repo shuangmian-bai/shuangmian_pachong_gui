@@ -1,63 +1,105 @@
 import os
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLineEdit, QFileDialog, QLabel
+from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLineEdit, QFileDialog, QLabel, QHBoxLayout
+from PyQt6.QtGui import QIcon, QFont
 from configparser import ConfigParser, NoSectionError
 
 class SettingDialog(QDialog):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("设置")
-        self.setGeometry(100, 100, 400, 200)
+        self.setFixedSize(400, 250)  # 设置窗口大小
+        self.setWindowIcon(QIcon("icon/settings.png"))  # 设置窗口图标
 
         # 初始化布局
         self.layout = QVBoxLayout()
+        self.layout.setSpacing(15)  # 增加组件间距
+        self.layout.setContentsMargins(20, 20, 20, 20)  # 边距保持不变
 
-        # 确保 static 文件夹存在
+        # 下载路径部分
+        dow_path_layout = QHBoxLayout()
+        self.dow_path_label = QLabel("下载路径:")
+        self.dow_path_label.setStyleSheet("""
+            font-size: 14px;
+            color: #333;
+        """)
+        self.dow_path_input = QLineEdit()
+        self.dow_path_input.setStyleSheet("""
+            font-size: 14px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        """)
+        self.dow_path_button = QPushButton("选择路径")
+        self.dow_path_button.setIcon(QIcon("icon/folder.png"))  # 添加文件夹图标
+        self.dow_path_button.setStyleSheet("""
+            font-size: 14px;
+            padding: 8px 16px;
+            background-color: #6c757d; /* 灰色 */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        """)
+        self.dow_path_button.clicked.connect(self.select_dow_path)
+
+        dow_path_layout.addWidget(self.dow_path_label)
+        dow_path_layout.addWidget(self.dow_path_input)
+        dow_path_layout.addWidget(self.dow_path_button)
+        self.layout.addLayout(dow_path_layout)
+
+        # 并发数量部分
+        n_layout = QHBoxLayout()
+        self.n_label = QLabel("并发数量:")
+        self.n_label.setStyleSheet("""
+            font-size: 14px;
+            color: #333;
+        """)
+        self.n_input = QLineEdit()
+        self.n_input.setStyleSheet("""
+            font-size: 14px;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        """)
+        n_layout.addWidget(self.n_label)
+        n_layout.addWidget(self.n_input)
+        self.layout.addLayout(n_layout)
+
+        # 保存按钮
+        self.save_button = QPushButton("保存设置")
+        self.save_button.setStyleSheet("""
+            font-size: 16px;
+            padding: 10px 20px;
+            background-color: #6c757d; /* 灰色 */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        """)
+        self.save_button.clicked.connect(self.save_settings)
+        self.layout.addWidget(self.save_button)
+
+        # 设置窗口布局
+        self.setLayout(self.layout)
+
+        # 初始化配置
+        self.config = ConfigParser()
+        self.load_settings()
+
+    def load_settings(self):
+        """加载设置"""
         static_folder = 'static'
-        if not os.path.exists(static_folder):
-            os.makedirs(static_folder)
-
-        # 检查并初始化 ini 文件
         ini_file_path = os.path.join(static_folder, 'Settings.ini')
+
         if not os.path.exists(ini_file_path):
             with open(ini_file_path, 'w') as configfile:
                 configfile.write("[Settings]\ndow_path=./下载/\nn=150\n")
 
-        # 读取 ini 文件
-        self.config = ConfigParser()
-        try:
-            self.config.read(ini_file_path)
-            if not self.config.has_section('Settings'):
-                raise NoSectionError('Settings')
-        except NoSectionError:
-            self.config.add_section('Settings')
-            self.config.set('Settings', 'dow_path', './下载/')
-            self.config.set('Settings', 'n', '150')
-            with open(ini_file_path, 'w') as configfile:
-                self.config.write(configfile)
+        self.config.read(ini_file_path)
 
-        # 下载路径部分
-        self.dow_path_label = QLabel("下载路径:")
-        self.dow_path_input = QLineEdit(self.config.get('Settings', 'dow_path'))
-        self.dow_path_button = QPushButton("选择路径")
-        self.dow_path_button.clicked.connect(self.select_dow_path)
-
-        # 并发数量部分
-        self.n_label = QLabel("并发数量:")
-        self.n_input = QLineEdit(self.config.get('Settings', 'n'))
-
-        # 确定按钮
-        self.save_button = QPushButton("保存设置")
-        self.save_button.clicked.connect(self.save_settings)
-
-        # 添加组件到布局
-        self.layout.addWidget(self.dow_path_label)
-        self.layout.addWidget(self.dow_path_input)
-        self.layout.addWidget(self.dow_path_button)
-        self.layout.addWidget(self.n_label)
-        self.layout.addWidget(self.n_input)
-        self.layout.addWidget(self.save_button)
-
-        self.setLayout(self.layout)
+        # 设置默认值
+        self.dow_path_input.setText(self.config.get('Settings', 'dow_path'))
+        self.n_input.setText(self.config.get('Settings', 'n'))
 
     def select_dow_path(self):
         """选择下载路径"""

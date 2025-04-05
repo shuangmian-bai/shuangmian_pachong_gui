@@ -1,9 +1,10 @@
+#file:C:\Users\Administrator\Desktop\双面的影视爬虫带gui\Main.py
 import sys
 import pandas as pd
 from PyQt6.QtWidgets import QApplication
 from GuiMain import MovieCrawlerGUI
 from get_data import MovieScraper
-
+from set_ini import SettingDialog  # 导入 SettingDialog 类
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def __init__(self, button_data, is_radio=True):
@@ -78,6 +79,14 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             print(f"处理多选按钮: {button}")
         # 在这里添加具体的处理逻辑
 
+    def show_settings_dialog(self):
+        """显示设置对话框"""
+        dialog = SettingDialog()  # 设置父窗口为当前窗口
+        dialog.exec()
+
+    def on_settings_clicked(self):
+        print("设置按钮被点击")
+        self.show_settings_dialog()  # 调用显示设置对话框的方法
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

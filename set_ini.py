@@ -8,7 +8,13 @@ class SettingDialog(QDialog):
         super().__init__()
         self.setWindowTitle("设置")
         self.setFixedSize(400, 250)  # 设置窗口大小
-        self.setWindowIcon(QIcon("icon/settings.png"))  # 设置窗口图标
+
+        # 加载窗口图标
+        window_icon = QIcon("static/icon/shuangmian.ico")
+        if window_icon.isNull():
+            print("警告：窗口图标未正确加载！请检查路径：static/icon/shuangmian.ico")
+        else:
+            self.setWindowIcon(window_icon)
 
         # 初始化布局
         self.layout = QVBoxLayout()
@@ -29,8 +35,14 @@ class SettingDialog(QDialog):
             border: 1px solid #ccc;
             border-radius: 5px;
         """)
+
+        # 加载文件夹图标
+        folder_icon = QIcon("icon/folder.png")
+        if folder_icon.isNull():
+            print("警告：文件夹图标未正确加载！请检查路径：icon/folder.png")
+
         self.dow_path_button = QPushButton("选择路径")
-        self.dow_path_button.setIcon(QIcon("icon/folder.png"))  # 添加文件夹图标
+        self.dow_path_button.setIcon(folder_icon)
         self.dow_path_button.setStyleSheet("""
             font-size: 14px;
             padding: 8px 16px;

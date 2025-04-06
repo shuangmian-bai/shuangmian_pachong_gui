@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QPr
 from PyQt6.QtCore import QThread, pyqtSignal, QDir
 from PyQt6.QtGui import QIcon
 
+
 class TaskThread(QThread):
     """ 任务执行线程 """
     progress_signal = pyqtSignal(int, int)  # 信号：发送任务索引和进度
@@ -17,9 +18,13 @@ class TaskThread(QThread):
         for idx, task in enumerate(self.tasks):
             total_amount = self.task_amounts[idx]
             completed_amount = self.task_completed_amounts[idx]
-            progress = (completed_amount / total_amount) * 100
+            if total_amount == 0:
+                progress = 0
+            else:
+                progress = (completed_amount / total_amount) * 100
             self.progress_signal.emit(idx, int(progress))  # 发送进度信号
             self.msleep(50)  # 模拟任务耗时
+
 
 class ProgressPopup(QDialog):
     """ 进度条弹窗窗口 """
@@ -151,6 +156,7 @@ class ProgressPopup(QDialog):
         """ 更新指定任务的进度条 """
         if 0 <= task_idx < len(self.progress_bars):
             self.progress_bars[task_idx].setValue(progress)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

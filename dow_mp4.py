@@ -7,6 +7,7 @@ from requests.exceptions import RequestException, ConnectionError
 from tqdm import tqdm
 import logging
 from urllib3.exceptions import InsecureRequestWarning
+from PyQt6.QtCore import pyqtSignal, QObject
 
 # 手动创建日志文件并设置编码
 log_file = 'dow_mp4.log'
@@ -24,6 +25,10 @@ file_handler.setFormatter(formatter)
 
 # 将文件处理器添加到日志记录器
 logger.addHandler(file_handler)
+
+
+class DownloadProgress(QObject):
+    progress_updated = pyqtSignal(int, int)  # 信号：发送已完成数量和总数
 
 
 def retry_request(url, max_retries=3, backoff_factor=5):
@@ -46,7 +51,7 @@ def retry_request(url, max_retries=3, backoff_factor=5):
                 raise
 
 
-def download_ts(ts_url, file_path, semaphore, failed_urls, progress_bar):
+def download_ts(ts_url, file_path, semaphore, failed_urls, progress_bar, progress_signal=None):
     """下载单个 ts 文件"""
     with semaphore:
         try:
@@ -58,13 +63,17 @@ def download_ts(ts_url, file_path, semaphore, failed_urls, progress_bar):
             progress_bar.set_description(f'下载完成: {file_path}')
             progress_bar.update(1)  # 更新进度条
             logging.info(f'下载完成: {file_path}')
+            if progress_signal:
+                progress_signal.emit(progress_bar.n, progress_bar.total)
         except Exception as e:
             progress_bar.set_description(f'下载失败: {ts_url} (异常: {e})')
             failed_urls.append(ts_url)
             logging.error(f'下载失败: {ts_url} (异常: {e})')
+            if progress_signal:
+                progress_signal.emit(progress_bar.n, progress_bar.total)
 
 
-def download_ts_files(ts_list, output_dir, n):
+def download_ts_files(ts_list, output_dir, n, progress_signal=None):
     """下载所有 ts 文件"""
     semaphore = threading.Semaphore(n)
     failed_urls = []
@@ -83,10 +92,12 @@ def download_ts_files(ts_list, output_dir, n):
                 progress_bar.set_description(f'文件已存在: {file_path}')
                 progress_bar.update(1)  # 更新进度条
                 logging.info(f'文件已存在: {file_path}')
+                if progress_signal:
+                    progress_signal.emit(i + 1, len(ts_list))
                 continue
 
             # 创建线程对象
-            t = threading.Thread(target=download_ts, args=(ts, file_path, semaphore, failed_urls, progress_bar))
+            t = threading.Thread(target=download_ts, args=(ts, file_path, semaphore, failed_urls, progress_bar, progress_signal))
             t.start()
             threads.append(t)
 
@@ -114,7 +125,7 @@ def concatenate_ts_files(output_dir, output_file):
     logging.info(f'文件合并完成: {output_file}')
 
 
-def dow_mp4(ts_list, path, n):
+def dow_mp4(ts_list, path, n, progress_signal=None):
     """主函数：下载并合并 TS 文件为 MP4"""
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
@@ -129,7 +140,7 @@ def dow_mp4(ts_list, path, n):
     os.makedirs(output_dir, exist_ok=True)
 
     # 下载 ts 文件
-    failed_urls = download_ts_files(ts_list, output_dir, n)
+    failed_urls = download_ts_files(ts_list, output_dir, n, progress_signal)
 
     # 检查下载结果
     if failed_urls:

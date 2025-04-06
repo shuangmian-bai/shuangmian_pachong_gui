@@ -139,6 +139,13 @@ def dow_mp4(ts_list, path, n, progress_signal=None):
     # 确认路径存在
     os.makedirs(output_dir, exist_ok=True)
 
+    # 检查输出文件是否已经存在
+    if os.path.exists(output_file):
+        logging.info(f'输出文件已存在: {output_file}')
+        if progress_signal:
+            progress_signal.emit(len(ts_list), len(ts_list))  # 设置进度条为100%
+        return
+
     # 下载 ts 文件
     failed_urls = download_ts_files(ts_list, output_dir, n, progress_signal)
 

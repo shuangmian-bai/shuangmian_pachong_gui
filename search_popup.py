@@ -27,11 +27,9 @@ class SearchPopup:
         print("close_popup 方法被调用")  # 添加调试信息
         if self.popup and self.popup.isVisible():
             self.popup.close()
-            self.popup = None
             print("弹窗已关闭")
         else:
             print("弹窗不存在或未显示，无法关闭")
-
 
 def main():
     app = QApplication([])
@@ -58,7 +56,6 @@ def main():
     QTimer.singleShot(5000, search_popup.close_popup)  # 延迟 5 秒后自动关闭弹窗
 
     app.exec()
-
 
 if __name__ == "__main__":
     main()

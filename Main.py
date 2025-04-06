@@ -1,10 +1,23 @@
-# Main.py
 import sys
 import pandas as pd
 from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QThread, pyqtSignal
 from GuiMain import MovieCrawlerGUI
 from get_data import MovieScraper
 from set_ini import SettingDialog  # 导入 SettingDialog 类
+from search_popup import SearchPopup  # 导入搜索弹窗类
+
+class SearchThread(QThread):
+    search_finished = pyqtSignal(dict)  # 信号，用于通知搜索完成
+
+    def __init__(self, movie_scraper, query):
+        super().__init__()
+        self.movie_scraper = movie_scraper
+        self.query = query
+
+    def run(self):
+        results = self.movie_scraper.search_movies(self.query)
+        self.search_finished.emit(results)
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def __init__(self, button_data, is_radio=True):
@@ -14,6 +27,8 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.last_query = None  # 添加一个变量来存储上次的查询关键词
         self.results = None  # 添加一个变量来存储搜索结果
         self.selected_button = None  # 新增实例变量来存储选中的单选按钮
+        self.search_popup = SearchPopup(self)  # 全局化 SearchPopup 对象
+        self.search_thread = None  # 初始化搜索线程
 
     def on_search_clicked(self):
         print("自定义：搜索按钮被点击")
@@ -28,8 +43,17 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 更新上次查询关键词
         self.last_query = query
 
-        # 调用 MovieScraper 的 search_movies 方法进行搜索
-        self.results = self.movie_scraper.search_movies(query)  # 将结果存储在实例变量中
+        # 显示搜索弹窗
+        self.search_popup.show_popup()
+
+        # 启动搜索线程
+        self.search_thread = SearchThread(self.movie_scraper, query)
+        self.search_thread.search_finished.connect(self.on_search_finished)
+        self.search_thread.start()
+
+    def on_search_finished(self, results):
+        print("搜索完成")
+        self.results = results
         self.process_results_and_update_ui(True)
 
     def process_results_and_update_ui(self, is_radio):
@@ -41,6 +65,9 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 将 cache 转换成二维列表，每个子列表包含 10 个元素
         n = 10
         cache_2d = [cache[i:i + n] for i in range(0, len(cache), n)]
+
+        # 关闭搜索弹窗
+        self.search_popup.close_popup()
 
         # 更新按钮数据
         self.update_button_data(cache_2d, is_radio)
@@ -57,7 +84,15 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         if self.is_radio:
             selected_button = selected_buttons[0]
             print(f"选中的单选按钮: {selected_button}")
+
+            # 显示搜索弹窗
+            self.search_popup.show_popup()
+
+            # 处理单选按钮的逻辑
             self.handle_selected_radio_button(selected_button)
+
+            # 关闭搜索弹窗
+            self.search_popup.close_popup()
         else:
             print(f"选中的多选按钮列表: {selected_buttons}")
             self.handle_selected_check_buttons(selected_buttons)
@@ -115,6 +150,10 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def on_settings_clicked(self):
         print("设置按钮被点击")
         self.show_settings_dialog()  # 调用显示设置对话框的方法
+
+    def show_search_popup(self):
+        """显示搜索弹窗"""
+        self.search_popup.exec()
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

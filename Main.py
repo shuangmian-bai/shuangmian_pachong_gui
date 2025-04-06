@@ -19,6 +19,45 @@ class SearchThread(QThread):
         results = self.movie_scraper.search_movies(self.query)
         self.search_finished.emit(results)
 
+class ProcessCheckButtonsThread(QThread):
+    process_finished = pyqtSignal()  # 信号，用于通知处理完成
+
+    def __init__(self, movie_scraper, results, selected_buttons, settings):
+        super().__init__()
+        self.movie_scraper = movie_scraper
+        self.results = results
+        self.selected_buttons = selected_buttons
+        self.settings = settings
+
+    def run(self):
+        for button in self.selected_buttons:
+            try:
+                cache = self.results[button]
+                # 调用 get_m3u8
+                m3u8 = self.movie_scraper.get_m3u8(cache)
+                if not m3u8:
+                    print(f"无法获取 m3u8 文件: {button}")
+                    continue
+
+                # 获取 ts 列表
+                ts_list = self.movie_scraper.get_ts_list(m3u8)
+                if not ts_list:
+                    print(f"无法获取 ts 列表: {button}")
+                    continue
+
+                dow_path = self.settings.get('dow_path', './/') + button + '.mp4'
+                n = int(self.settings.get('n', 150))  # 获取 n 参数并转换为整数
+
+                if not dow_path:
+                    print("下载路径未设置，无法下载视频")
+                    continue
+                # 下载视频
+                self.movie_scraper.dow_mp4(ts_list, dow_path, n)  # 使用 n 参数
+                print(f"处理多选按钮: {button} 下载完成")
+            except Exception as e:
+                print(f"处理多选按钮: {button} 时发生错误: {e}")
+        self.process_finished.emit()
+
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def __init__(self, button_data, is_radio=True):
         super().__init__(button_data, is_radio)
@@ -29,6 +68,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.selected_button = None  # 新增实例变量来存储选中的单选按钮
         self.search_popup = SearchPopup(self)  # 全局化 SearchPopup 对象
         self.search_thread = None  # 初始化搜索线程
+        self.process_check_buttons_thread = None  # 初始化处理复选框按钮的线程
 
     def on_search_clicked(self):
         print("自定义：搜索按钮被点击")
@@ -95,10 +135,20 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             self.search_popup.close_popup()
         else:
             print(f"选中的多选按钮列表: {selected_buttons}")
-            self.handle_selected_check_buttons(selected_buttons)
+            # 读取 Settings.ini
+            settings_dialog = SettingDialog()
+            settings = settings_dialog.settings  # 直接使用 settings_dialog.settings
+
+            # 启动处理复选框按钮的线程
+            self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results, selected_buttons, settings)
+            self.process_check_buttons_thread.process_finished.connect(self.on_process_finished)
+            self.process_check_buttons_thread.start()
 
         # 清除上次输入的缓存
         self.last_query = None
+
+    def on_process_finished(self):
+        print("处理复选框按钮完成")
 
     def handle_selected_radio_button(self, button):
         # 处理单选按钮的逻辑

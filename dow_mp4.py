@@ -128,7 +128,6 @@ def concatenate_ts_files(output_dir, output_file):
 def dow_mp4(ts_list, path, n, progress_signal=None):
     """主函数：下载并合并 TS 文件为 MP4"""
     requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
-
     # 从参数中提取数据
     name = os.path.basename(path)
     base_path = os.path.dirname(path)

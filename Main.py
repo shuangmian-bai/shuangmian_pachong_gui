@@ -1,3 +1,4 @@
+import os
 import sys
 import pandas as pd
 from PyQt6.QtWidgets import QApplication
@@ -20,10 +21,8 @@ class SearchThread(QThread):
 
     def run(self):
         results = self.movie_scraper.search_movies(self.query)
-        self.search_finished.emit(results)
+        self.search_finished.emit(results)  # 确保这里正确调用 emit
 
-
-import os
 
 class ProcessCheckButtonsThread(QThread):
     process_finished = pyqtSignal()  # 信号，用于通知处理完成
@@ -159,7 +158,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             settings = settings_dialog.settings  # 直接使用 settings_dialog.settings
 
             # 启动处理复选框按钮的线程
-            self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results, selected_buttons, settings, self.download_progress.progress_updated,self)
+            self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results, selected_buttons, settings, self.download_progress.progress_updated, self)
             self.process_check_buttons_thread.process_finished.connect(self.on_process_finished)
             self.process_check_buttons_thread.start()
 

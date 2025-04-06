@@ -10,7 +10,7 @@
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{44D55B28-BD93-4995-BEE5-34047FD6CD6C}
+AppId={{44D55B28-BD93-4995-BEE5-34047FD6CD6C}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -42,7 +42,7 @@ WizardStyle=modern
 Name: "chinese"; MessagesFile: "compiler:Languages\Chinese.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checked  ; 修改此处为 checked
 
 [Files]
 ; 主可执行文件

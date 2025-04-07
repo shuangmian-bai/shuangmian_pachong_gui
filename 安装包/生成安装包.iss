@@ -8,28 +8,17 @@
 #define MyAppExeName "Main.exe"
 
 [Setup]
-; NOTE: The value of AppId uniquely identifies this application. Do not use the same AppId value in installers for other applications.
-; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{44D55B28-BD93-4995-BEE5-34047FD6CD6C}}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-;AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={autopf}\{#MyAppName}
-; "ArchitecturesAllowed=x64compatible" specifies that Setup cannot run
-; on anything but x64 and Windows 11 on Arm.
 ArchitecturesAllowed=x64compatible
-; "ArchitecturesInstallIn64BitMode=x64compatible" requests that the
-; install be done in "64-bit mode" on x64 or Windows 11 on Arm,
-; meaning it should use the native 64-bit Program Files directory and
-; the 64-bit view of the registry.
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableProgramGroupPage=yes
-; Uncomment the following line to run in non administrative install mode (install for current user only.)
-;PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=C:\Users\Administrator\Desktop\双面的影视爬虫带gui\安装包
 OutputBaseFilename=双面的影视爬虫gui安装包
@@ -42,7 +31,7 @@ WizardStyle=modern
 Name: "chinese"; MessagesFile: "compiler:Languages\Chinese.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: checked  ; 修改此处为 checked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 ; 主可执行文件
@@ -50,8 +39,6 @@ Source: "..\dist\Main\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 ; 直接导入整个 dist\Main 文件夹及其所有内容
 Source: "..\dist\Main\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
-
-; 注意：不要对共享系统文件使用 "Flags: ignoreversion"
 
 [Icons]
 ; 程序菜单图标

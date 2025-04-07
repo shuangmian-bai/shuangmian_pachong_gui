@@ -26,18 +26,19 @@ class SearchThread(QThread):
 
 class ProcessCheckButtonsThread(QThread):
     process_finished = pyqtSignal()  # 信号，用于通知处理完成
+    progress_updated = pyqtSignal(int, int)  # 新增进度更新信号
 
-    def __init__(self, movie_scraper, results, selected_buttons, settings, progress_signal, gui_instance):
+    def __init__(self, movie_scraper, results, selected_buttons, settings, gui_instance):
         super().__init__()
         self.movie_scraper = movie_scraper
         self.results = results
         self.selected_buttons = selected_buttons
         self.settings = settings
-        self.progress_signal = progress_signal
         self.gui_instance = gui_instance  # 传递 GUI 实例以访问其属性
 
     def run(self):
-        for button in self.selected_buttons:
+        total_tasks = len(self.selected_buttons)
+        for index, button in enumerate(self.selected_buttons):
             try:
                 cache = self.results[button]
                 # 调用 get_m3u8
@@ -65,12 +66,14 @@ class ProcessCheckButtonsThread(QThread):
                 print(f"下载路径: {dow_path}")
 
                 # 下载视频
-                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_signal)
+                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_updated)
                 print(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
                 import traceback
                 print(f"处理多选按钮: {button} 时发生错误: {e}")
                 traceback.print_exc()  # 打印详细的错误堆栈信息
+            finally:
+                self.progress_updated.emit(index + 1, total_tasks)  # 发出进度更新信号
         self.process_finished.emit()
 
 
@@ -160,14 +163,14 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
             # 启动处理复选框按钮的线程
             self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results,
-                                                                          selected_buttons, settings,
-                                                                          self.download_progress.progress_updated, self)
+                                                                          selected_buttons, settings, self)
             self.process_check_buttons_thread.process_finished.connect(self.on_process_finished)
+            self.process_check_buttons_thread.progress_updated.connect(self.update_progress)  # 连接进度更新信号
             self.process_check_buttons_thread.start()
 
             # 显示进度条弹窗
             self.progress_popup.set_task_names([f"下载 {button}" for button in selected_buttons])
-            self.progress_popup.set_task_amount(f"下载 {selected_buttons[0]}", 1)  # 初始化进度条
+            self.progress_popup.set_task_amount(f"下载 {selected_buttons[0]}", len(selected_buttons))  # 初始化进度条
             self.progress_popup.show()
 
         # 清除上次输入的缓存

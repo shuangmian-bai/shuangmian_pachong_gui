@@ -224,6 +224,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             except Exception as e:
                 print(f"处理多选按钮: {button} 时发生错误: {e}")
 
+
     def show_settings_dialog(self):
         """显示设置对话框"""
         dialog = SettingDialog()  # 设置父窗口为当前窗口

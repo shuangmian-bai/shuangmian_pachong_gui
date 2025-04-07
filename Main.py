@@ -8,7 +8,7 @@ from get_data import MovieScraper
 from set_ini import SettingDialog  # 导入 SettingDialog 类
 from search_popup import SearchPopup  # 导入搜索弹窗类
 from progress_popup import ProgressPopup  # 导入进度条弹窗类
-from dow_mp4 import DownloadProgress  # 导入 DownloadProgress 类
+from dow_mp4 import dow_mp4  # 导入 dow_mp4 函数
 
 
 class SearchThread(QThread):
@@ -26,15 +26,15 @@ class SearchThread(QThread):
 
 class ProcessCheckButtonsThread(QThread):
     process_finished = pyqtSignal()  # 信号，用于通知处理完成
-    progress_updated = pyqtSignal(int, int)  # 新增进度更新信号
 
-    def __init__(self, movie_scraper, results, selected_buttons, settings, gui_instance):
+    def __init__(self, movie_scraper, results, selected_buttons, settings, gui_instance, progress_popup):
         super().__init__()
         self.movie_scraper = movie_scraper
         self.results = results
         self.selected_buttons = selected_buttons
         self.settings = settings
         self.gui_instance = gui_instance  # 传递 GUI 实例以访问其属性
+        self.progress_popup = progress_popup
 
     def run(self):
         total_tasks = len(self.selected_buttons)
@@ -54,8 +54,7 @@ class ProcessCheckButtonsThread(QThread):
                     continue
 
                 # 构建下载路径
-                dow_path = os.path.join(self.settings.get('dow_path', '.'),
-                                        f"{self.gui_instance.selected_button + button}.mp4")
+                dow_path = os.path.join(self.settings.get('dow_path', '.'), f"{self.gui_instance.selected_button + button}.mp4")
                 n = int(self.settings.get('n', 150))  # 获取 n 参数并转换为整数
 
                 if not dow_path:
@@ -66,14 +65,14 @@ class ProcessCheckButtonsThread(QThread):
                 print(f"下载路径: {dow_path}")
 
                 # 下载视频
-                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_updated)
+                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}")
                 print(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
                 import traceback
                 print(f"处理多选按钮: {button} 时发生错误: {e}")
                 traceback.print_exc()  # 打印详细的错误堆栈信息
             finally:
-                self.progress_updated.emit(index + 1, total_tasks)  # 发出进度更新信号
+                self.progress_popup.set_task_amount(f"下载 {button}", len(ts_list))
         self.process_finished.emit()
 
 
@@ -89,8 +88,6 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.search_thread = None  # 初始化搜索线程
         self.process_check_buttons_thread = None  # 初始化处理复选框按钮的线程
         self.progress_popup = ProgressPopup()  # 创建进度条弹窗实例
-        self.download_progress = DownloadProgress()  # 创建下载进度信号实例
-        self.download_progress.progress_updated.connect(self.update_progress)
         self.progress_popup.rejected.connect(self.on_progress_popup_closed)  # 连接 rejected 信号
 
     def on_search_clicked(self):
@@ -164,14 +161,12 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
             # 启动处理复选框按钮的线程
             self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results,
-                                                                          selected_buttons, settings, self)
+                                                                          selected_buttons, settings, self, self.progress_popup)
             self.process_check_buttons_thread.process_finished.connect(self.on_process_finished)
-            self.process_check_buttons_thread.progress_updated.connect(self.update_progress)  # 连接进度更新信号
             self.process_check_buttons_thread.start()
 
             # 显示进度条弹窗（设置为模态对话框）
             self.progress_popup.set_task_names([f"下载 {button}" for button in selected_buttons])
-            self.progress_popup.set_task_amount(f"下载 {selected_buttons[0]}", len(selected_buttons))  # 初始化进度条
             self.progress_popup.setModal(True)  # 设置为模态对话框
             self.progress_popup.show()
 
@@ -219,11 +214,10 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
                     print("下载路径未设置，无法下载视频")
                     continue
                 # 下载视频
-                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_updated)  # 使用 n 参数
+                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}")  # 使用 n 参数
                 print(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
                 print(f"处理多选按钮: {button} 时发生错误: {e}")
-
 
     def show_settings_dialog(self):
         """显示设置对话框"""

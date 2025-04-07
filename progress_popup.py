@@ -1,29 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QProgressBar, QLabel, QPushButton
-from PyQt6.QtCore import QThread, pyqtSignal, QDir
+from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
-
-
-class TaskThread(QThread):
-    """ 任务执行线程 """
-    progress_signal = pyqtSignal(int, int)  # 信号：发送任务索引和进度
-
-    def __init__(self, tasks, task_amounts, task_completed_amounts):
-        super().__init__()
-        self.tasks = tasks
-        self.task_amounts = task_amounts
-        self.task_completed_amounts = task_completed_amounts  # 记录每个任务当前完成的数量
-
-    def run(self):
-        for idx, task in enumerate(self.tasks):
-            total_amount = self.task_amounts[idx]
-            completed_amount = self.task_completed_amounts[idx]
-            if total_amount == 0:
-                progress = 0
-            else:
-                progress = (completed_amount / total_amount) * 100
-            self.progress_signal.emit(idx, int(progress))  # 发送进度信号
-            self.msleep(50)  # 模拟任务耗时
 
 
 class ProgressPopup(QDialog):
@@ -53,12 +31,6 @@ class ProgressPopup(QDialog):
 
         # 设置主布局
         self.setLayout(main_layout)
-
-        # 初始化任务线程
-        self.task_thread = None
-
-        # 连接 rejected 信号到关闭处理方法
-        self.rejected.connect(self.on_progress_popup_closed)
 
     def set_task_names(self, task_names):
         """ 设置任务名称列表并更新UI """
@@ -94,8 +66,7 @@ class ProgressPopup(QDialog):
             progress_bar.setMaximum(100)
 
             # 设置进度条样式
-            progress_bar.setStyleSheet("""
-                QProgressBar {
+            progress_bar.setStyleSheet("""QProgressBar {
                     border: 1px solid #666;
                     border-radius: 5px;
                     background-color: #f0f0f0; /* 背景色 */
@@ -106,8 +77,7 @@ class ProgressPopup(QDialog):
                     background-color: #666; /* 进度条颜色 */
                     width: 10px;
                     margin: 1px;
-                }
-            """)
+                }""")
             h_layout.addWidget(progress_bar)
 
             # 将水平布局添加到主布局
@@ -116,32 +86,30 @@ class ProgressPopup(QDialog):
             # 保存进度条引用
             self.progress_bars.append(progress_bar)
 
-        # 初始化任务线程
-        self.task_thread = TaskThread(self.tasks, self.task_amounts, self.task_completed_amounts)
-        self.task_thread.progress_signal.connect(self.update_progress)
-        self.task_thread.start()
-
     def set_task_amount(self, task_name, task_amount):
         """ 设置指定任务的任务量 """
         if task_name in self.tasks:
             idx = self.tasks.index(task_name)
             self.task_amounts[idx] = task_amount
-            self.restart_task_thread()
+            self.update_progress(idx)
 
     def update_task_completed_amount(self, task_name, completed_amount):
         """ 更新指定任务的完成量 """
         if task_name in self.tasks:
             idx = self.tasks.index(task_name)
-            self.task_completed_amounts[idx] += completed_amount
-            self.restart_task_thread()
+            self.task_completed_amounts[idx] = completed_amount
+            self.update_progress(idx)
 
-    def restart_task_thread(self):
-        """ 重新启动任务线程 """
-        if self.task_thread:
-            self.task_thread.terminate()
-        self.task_thread = TaskThread(self.tasks, self.task_amounts, self.task_completed_amounts)
-        self.task_thread.progress_signal.connect(self.update_progress)
-        self.task_thread.start()
+    def update_progress(self, task_idx):
+        """ 更新指定任务的进度条 """
+        if 0 <= task_idx < len(self.progress_bars):
+            total_amount = self.task_amounts[task_idx]
+            completed_amount = self.task_completed_amounts[task_idx]
+            if total_amount == 0:
+                progress = 0
+            else:
+                progress = (completed_amount / total_amount) * 100
+            self.progress_bars[task_idx].setValue(int(progress))
 
     def clear_layout(self, layout):
         """ 清除布局中的所有子项 """
@@ -154,11 +122,6 @@ class ProgressPopup(QDialog):
                 nested_layout = item.layout()
                 if nested_layout:
                     self.clear_layout(nested_layout)  # 递归清理嵌套布局
-
-    def update_progress(self, task_idx, progress):
-        """ 更新指定任务的进度条 """
-        if 0 <= task_idx < len(self.progress_bars):
-            self.progress_bars[task_idx].setValue(progress)
 
     def on_progress_popup_closed(self):
         """ 处理进度条弹窗关闭事件 """

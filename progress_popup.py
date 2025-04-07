@@ -57,6 +57,9 @@ class ProgressPopup(QDialog):
         # 初始化任务线程
         self.task_thread = None
 
+        # 连接 rejected 信号到关闭处理方法
+        self.rejected.connect(self.on_progress_popup_closed)
+
     def set_task_names(self, task_names):
         """ 设置任务名称列表并更新UI """
         self.tasks = task_names
@@ -156,6 +159,12 @@ class ProgressPopup(QDialog):
         """ 更新指定任务的进度条 """
         if 0 <= task_idx < len(self.progress_bars):
             self.progress_bars[task_idx].setValue(progress)
+
+    def on_progress_popup_closed(self):
+        """ 处理进度条弹窗关闭事件 """
+        print("进度条弹窗被关闭")
+        # 这里可以添加终止下载线程的逻辑
+        # 例如：self.parent().process_check_buttons_thread.terminate()
 
 
 if __name__ == "__main__":

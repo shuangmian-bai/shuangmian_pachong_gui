@@ -1,7 +1,7 @@
 import os
 import sys
 import pandas as pd
-from PyQt6.QtWidgets import QApplication, QMainWindow
+from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PyQt6.QtCore import QThread, pyqtSignal
 from GuiMain import MovieCrawlerGUI
 from get_data import MovieScraper
@@ -91,6 +91,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.progress_popup = ProgressPopup()  # 创建进度条弹窗实例
         self.download_progress = DownloadProgress()  # 创建下载进度信号实例
         self.download_progress.progress_updated.connect(self.update_progress)
+        self.progress_popup.rejected.connect(self.on_progress_popup_closed)  # 连接 rejected 信号
 
     def on_search_clicked(self):
         print("自定义：搜索按钮被点击")
@@ -168,9 +169,10 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             self.process_check_buttons_thread.progress_updated.connect(self.update_progress)  # 连接进度更新信号
             self.process_check_buttons_thread.start()
 
-            # 显示进度条弹窗
+            # 显示进度条弹窗（设置为模态对话框）
             self.progress_popup.set_task_names([f"下载 {button}" for button in selected_buttons])
             self.progress_popup.set_task_amount(f"下载 {selected_buttons[0]}", len(selected_buttons))  # 初始化进度条
+            self.progress_popup.setModal(True)  # 设置为模态对话框
             self.progress_popup.show()
 
         # 清除上次输入的缓存
@@ -217,7 +219,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
                     print("下载路径未设置，无法下载视频")
                     continue
                 # 下载视频
-                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_signal)  # 使用 n 参数
+                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_updated)  # 使用 n 参数
                 print(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
                 print(f"处理多选按钮: {button} 时发生错误: {e}")
@@ -239,6 +241,12 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         task_name = f"下载 {self.selected_button}"
         self.progress_popup.set_task_amount(task_name, total)
         self.progress_popup.update_task_completed_amount(task_name, completed)
+
+    def on_progress_popup_closed(self):
+        print("进度条弹窗被关闭")
+        if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
+            self.process_check_buttons_thread.terminate()
+            QMessageBox.warning(self, "下载终止", "下载进程已终止")
 
     def closeEvent(self, event):
         # 确保所有线程已经结束或处理完

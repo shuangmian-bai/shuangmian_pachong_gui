@@ -114,6 +114,9 @@ def dow_mp4(ts_list, path, n, popup, task_name):
         popup.update_task_completed_amount(task_name, len(ts_list))
         return
 
+    # 设置任务总量
+    popup.set_task_amount(task_name, len(ts_list))
+
     # 下载 ts 文件
     failed_urls = download_ts_files(ts_list, output_dir, n, popup, task_name)
 

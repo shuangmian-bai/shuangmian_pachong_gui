@@ -256,9 +256,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
             self.process_check_buttons_thread.terminate()
 
-        # 退出应用程序
-        QApplication.quit()
-        event.accept()
+        # # 退出应用程序
         exit()
 
 

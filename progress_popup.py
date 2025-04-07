@@ -146,7 +146,10 @@ if __name__ == "__main__":
     popup.set_task_amount("任务2", 100)
     popup.set_task_amount("任务3", 300)
 
-    # 更新任务3的完成量
-    popup.update_task_completed_amount("任务3", 3)  # 进度条加1%
+    for i in range(10):
+        # 更新任务3的完成量
+        popup.update_task_completed_amount("任务3", 3)  # 进度条加1%
+        popup.update_task_completed_amount("任务3", 6)  # 进度条加1%
+        popup.update_task_completed_amount("任务3", 9)  # 进度条加1%
 
     sys.exit(app.exec())

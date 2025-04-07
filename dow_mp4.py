@@ -6,6 +6,8 @@ import requests
 from requests.exceptions import RequestException, ConnectionError
 from urllib3.exceptions import InsecureRequestWarning
 
+# 定义锁对象
+completed_files_lock = threading.Lock()
 
 def retry_request(url, max_retries=3, backoff_factor=5):
     """尝试请求 URL，直到成功或达到最大重试次数"""
@@ -24,7 +26,6 @@ def retry_request(url, max_retries=3, backoff_factor=5):
             else:
                 raise
 
-
 def download_ts(ts_url, file_path, semaphore, failed_urls, popup, task_name, completed_files, total_files):
     """下载单个 ts 文件"""
     with semaphore:
@@ -34,11 +35,12 @@ def download_ts(ts_url, file_path, semaphore, failed_urls, popup, task_name, com
                 raise Exception("Empty response")
             with open(file_path, 'wb') as f:
                 f.write(response.content)
-            completed_files += 1
-            popup.update_task_completed_amount(task_name, completed_files)
+            with completed_files_lock:
+                completed_files[0] += 1
+                print(completed_files[0])
+                popup.update_task_completed_amount(task_name, completed_files[0])  # 更新进度条
         except Exception as e:
             failed_urls.append(ts_url)
-
 
 def download_ts_files(ts_list, output_dir, n, popup, task_name):
     """下载所有 ts 文件"""
@@ -50,7 +52,8 @@ def download_ts_files(ts_list, output_dir, n, popup, task_name):
 
     threads = []
     total_files = len(ts_list)
-    completed_files = 0
+    completed_files = [0]  # 使用列表来存储共享变量
+    update_interval = max(1, total_files // 10)  # 每下载 10% 的文件更新一次进度条
 
     for i, ts in enumerate(ts_list):
         ts_name = str(i).zfill(lens)
@@ -58,8 +61,10 @@ def download_ts_files(ts_list, output_dir, n, popup, task_name):
 
         # 检查文件是否存在
         if os.path.exists(file_path):
-            completed_files += 1
-            popup.update_task_completed_amount(task_name, completed_files)
+            with completed_files_lock:
+                completed_files[0] += 1
+                if completed_files[0] % update_interval == 0:
+                    popup.update_task_completed_amount(task_name, completed_files[0])
             continue
 
         # 创建线程对象
@@ -75,8 +80,11 @@ def download_ts_files(ts_list, output_dir, n, popup, task_name):
     for t in threads:
         t.join()
 
-    return failed_urls
+    # 更新最后一次进度条
+    with completed_files_lock:
+        popup.update_task_completed_amount(task_name, completed_files[0])
 
+    return failed_urls
 
 def concatenate_ts_files(output_dir, output_file):
     """合并 ts 文件"""
@@ -87,7 +95,6 @@ def concatenate_ts_files(output_dir, output_file):
         for ts_file in ts_files:
             with open(ts_file, 'rb') as infile:
                 outfile.write(infile.read())
-
 
 def dow_mp4(ts_list, path, n, popup, task_name):
     """主函数：下载并合并 TS 文件为 MP4"""

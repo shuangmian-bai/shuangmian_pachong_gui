@@ -8,7 +8,6 @@ from get_data import MovieScraper
 from set_ini import SettingDialog  # 导入 SettingDialog 类
 from search_popup import SearchPopup  # 导入搜索弹窗类
 from progress_popup import ProgressPopup  # 导入进度条弹窗类
-from dow_mp4 import dow_mp4  # 导入 dow_mp4 函数
 
 
 class SearchThread(QThread):
@@ -38,6 +37,7 @@ class ProcessCheckButtonsThread(QThread):
 
     def run(self):
         total_tasks = len(self.selected_buttons)
+        self.progress_popup.set_task_amount("总任务", total_tasks)  # 设置总任务量
         for index, button in enumerate(self.selected_buttons):
             try:
                 cache = self.results[button]

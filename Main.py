@@ -247,6 +247,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 退出应用程序
         QApplication.quit()
         event.accept()
+        exit()
 
 
 if __name__ == "__main__":

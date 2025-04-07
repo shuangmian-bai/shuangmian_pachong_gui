@@ -1,6 +1,6 @@
 @echo off
 REM 设置变量是否为发布版本（1 为发布版本，0 为测试版本）
-set IS_RELEASE=0
+set IS_RELEASE=1
 
 REM 检查 PyInstaller 是否已安装
 python -m pip install --upgrade pyinstaller

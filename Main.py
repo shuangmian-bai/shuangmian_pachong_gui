@@ -1,7 +1,7 @@
 import os
 import sys
 import pandas as pd
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QMainWindow
 from PyQt6.QtCore import QThread, pyqtSignal
 from GuiMain import MovieCrawlerGUI
 from get_data import MovieScraper
@@ -53,7 +53,8 @@ class ProcessCheckButtonsThread(QThread):
                     continue
 
                 # 构建下载路径
-                dow_path = os.path.join(self.settings.get('dow_path', '.'), f"{self.gui_instance.selected_button+button}.mp4")
+                dow_path = os.path.join(self.settings.get('dow_path', '.'),
+                                        f"{self.gui_instance.selected_button + button}.mp4")
                 n = int(self.settings.get('n', 150))  # 获取 n 参数并转换为整数
 
                 if not dow_path:
@@ -158,7 +159,9 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             settings = settings_dialog.settings  # 直接使用 settings_dialog.settings
 
             # 启动处理复选框按钮的线程
-            self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results, selected_buttons, settings, self.download_progress.progress_updated, self)
+            self.process_check_buttons_thread = ProcessCheckButtonsThread(self.movie_scraper, self.results,
+                                                                          selected_buttons, settings,
+                                                                          self.download_progress.progress_updated, self)
             self.process_check_buttons_thread.process_finished.connect(self.on_process_finished)
             self.process_check_buttons_thread.start()
 
@@ -233,6 +236,17 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         task_name = f"下载 {self.selected_button}"
         self.progress_popup.set_task_amount(task_name, total)
         self.progress_popup.update_task_completed_amount(task_name, completed)
+
+    def closeEvent(self, event):
+        # 确保所有线程已经结束或处理完
+        if self.search_thread and self.search_thread.isRunning():
+            self.search_thread.terminate()
+        if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
+            self.process_check_buttons_thread.terminate()
+
+        # 退出应用程序
+        QApplication.quit()
+        event.accept()
 
 
 if __name__ == "__main__":

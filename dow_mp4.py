@@ -4,7 +4,6 @@ import threading
 import time
 import requests
 from requests.exceptions import RequestException, ConnectionError
-from tqdm import tqdm
 import logging
 from urllib3.exceptions import InsecureRequestWarning
 from PyQt6.QtCore import pyqtSignal, QObject
@@ -51,7 +50,7 @@ def retry_request(url, max_retries=3, backoff_factor=5):
                 raise
 
 
-def download_ts(ts_url, file_path, semaphore, failed_urls, progress_bar, progress_signal=None):
+def download_ts(ts_url, file_path, semaphore, failed_urls, progress_signal=None):
     """下载单个 ts 文件"""
     with semaphore:
         try:
@@ -60,17 +59,14 @@ def download_ts(ts_url, file_path, semaphore, failed_urls, progress_bar, progres
                 raise Exception("Empty response")
             with open(file_path, 'wb') as f:
                 f.write(response.content)
-            progress_bar.set_description(f'下载完成: {file_path}')
-            progress_bar.update(1)  # 更新进度条
             logging.info(f'下载完成: {file_path}')
             if progress_signal:
-                progress_signal.emit(progress_bar.n, progress_bar.total)
+                progress_signal.emit(progress_signal.receivers()[0][1] + 1, progress_signal.receivers()[0][2])
         except Exception as e:
-            progress_bar.set_description(f'下载失败: {ts_url} (异常: {e})')
             failed_urls.append(ts_url)
             logging.error(f'下载失败: {ts_url} (异常: {e})')
             if progress_signal:
-                progress_signal.emit(progress_bar.n, progress_bar.total)
+                progress_signal.emit(progress_signal.receivers()[0][1], progress_signal.receivers()[0][2])
 
 
 def download_ts_files(ts_list, output_dir, n, progress_signal=None):
@@ -82,32 +78,32 @@ def download_ts_files(ts_list, output_dir, n, progress_signal=None):
     lens = len(str(len(ts_list)))
 
     threads = []
-    with tqdm(total=len(ts_list), desc='下载进度') as progress_bar:
-        for i, ts in enumerate(ts_list):
-            ts_name = str(i).zfill(lens)
-            file_path = os.path.join(output_dir, f'{ts_name}.ts')
+    total_files = len(ts_list)
+    completed_files = 0
 
-            # 检查文件是否存在
-            if os.path.exists(file_path):
-                progress_bar.set_description(f'文件已存在: {file_path}')
-                progress_bar.update(1)  # 更新进度条
-                logging.info(f'文件已存在: {file_path}')
-                if progress_signal:
-                    progress_signal.emit(i + 1, len(ts_list))
-                continue
+    for i, ts in enumerate(ts_list):
+        ts_name = str(i).zfill(lens)
+        file_path = os.path.join(output_dir, f'{ts_name}.ts')
 
-            # 创建线程对象
-            t = threading.Thread(target=download_ts, args=(ts, file_path, semaphore, failed_urls, progress_bar, progress_signal))
-            t.start()
-            threads.append(t)
+        # 检查文件是否存在
+        if os.path.exists(file_path):
+            completed_files += 1
+            if progress_signal:
+                progress_signal.emit(completed_files, total_files)
+            continue
 
-            # 每启动 n 个线程后等待 5 秒
-            if (i + 1) % n == 0:
-                time.sleep(5)
+        # 创建线程对象
+        t = threading.Thread(target=download_ts, args=(ts, file_path, semaphore, failed_urls, progress_signal))
+        t.start()
+        threads.append(t)
 
-        # 等待所有线程完成
-        for t in threads:
-            t.join()
+        # 每启动 n 个线程后等待 5 秒
+        if (i + 1) % n == 0:
+            time.sleep(5)
+
+    # 等待所有线程完成
+    for t in threads:
+        t.join()
 
     return failed_urls
 

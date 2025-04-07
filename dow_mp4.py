@@ -50,7 +50,7 @@ def retry_request(url, max_retries=3, backoff_factor=5):
                 raise
 
 
-def download_ts(ts_url, file_path, semaphore, failed_urls, progress_signal=None):
+def download_ts(ts_url, file_path, semaphore, failed_urls, progress_signal=None, completed_files=0, total_files=0):
     """下载单个 ts 文件"""
     with semaphore:
         try:
@@ -61,12 +61,13 @@ def download_ts(ts_url, file_path, semaphore, failed_urls, progress_signal=None)
                 f.write(response.content)
             logging.info(f'下载完成: {file_path}')
             if progress_signal:
-                progress_signal.emit(progress_signal.receivers()[0][1] + 1, progress_signal.receivers()[0][2])
+                completed_files += 1
+                progress_signal.emit(completed_files, total_files)
         except Exception as e:
             failed_urls.append(ts_url)
             logging.error(f'下载失败: {ts_url} (异常: {e})')
             if progress_signal:
-                progress_signal.emit(progress_signal.receivers()[0][1], progress_signal.receivers()[0][2])
+                progress_signal.emit(completed_files, total_files)
 
 
 def download_ts_files(ts_list, output_dir, n, progress_signal=None):
@@ -93,7 +94,7 @@ def download_ts_files(ts_list, output_dir, n, progress_signal=None):
             continue
 
         # 创建线程对象
-        t = threading.Thread(target=download_ts, args=(ts, file_path, semaphore, failed_urls, progress_signal))
+        t = threading.Thread(target=download_ts, args=(ts, file_path, semaphore, failed_urls, progress_signal, completed_files, total_files))
         t.start()
         threads.append(t)
 

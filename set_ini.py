@@ -3,6 +3,42 @@ from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLi
 from PyQt6.QtGui import QIcon, QFont, QIntValidator
 from configparser import ConfigParser, NoSectionError
 
+
+import os
+
+import os
+
+def process_path(dow_path):
+    """处理路径字符串，确保路径合法且格式正确"""
+    # 检查是否为相对路径
+    is_relative = dow_path.startswith('./') or dow_path.startswith('../')
+
+    # 处理 Windows 绝对路径中的冒号
+    if os.name == 'nt' and ':' in dow_path:
+        drive, path = dow_path.split(':', 1)
+        path = path.lstrip('\\')  # 去除路径前的反斜杠
+        dow_path = f"{drive}:{path}"
+
+    # 替换非法字符
+    illegal_chars = ['<', '>', '"', '|', '?', '*']
+    for char in illegal_chars:
+        dow_path = dow_path.replace(char, '_')  # 替换为单下划线更简洁
+
+    # 使用 os.path 来处理路径分隔符
+    dow_path = os.path.normpath(dow_path).replace(os.sep, '/')
+
+    # 如果是相对路径，确保保留相对路径符号
+    if is_relative and not dow_path.startswith('./'):
+        dow_path = './' + dow_path
+
+    # 确保路径末尾有且仅有一个斜杠
+    if not dow_path.endswith('/'):
+        dow_path += '/'
+
+    return dow_path
+
+
+
 class SettingDialog(QDialog):
     def __init__(self):
         super().__init__()
@@ -128,8 +164,7 @@ class SettingDialog(QDialog):
         """选择下载路径"""
         dow_path = QFileDialog.getExistingDirectory(self, "选择下载路径")
         if dow_path:
-            # 解析非法字符
-            pass
+            dow_path = process_path(dow_path)
             self.dow_path_input.setText(dow_path)
 
     def save_settings(self):
@@ -137,16 +172,7 @@ class SettingDialog(QDialog):
         dow_path = self.dow_path_input.text()
         n = self.n_input.text()
 
-        # 处理路径字符串
-        illegal_chars = [':', '*', '?', '"', '<', '>', '|']
-        for char in illegal_chars:
-            dow_path = dow_path.replace(char, '_')  # 替换为单下划线更简洁
-        dow_path = dow_path.replace('\\', '/')  # 统一为正斜杠
-        dow_path = '/'.join(filter(None, dow_path.split('/')))  # 去除多余斜杠
-
-        # 确保路径末尾有且仅有一个斜杠
-        if not dow_path.endswith('/'):
-            dow_path += '/'
+        dow_path = process_path(dow_path)
 
         # 更新 ini 文件
         static_folder = 'static'

@@ -1,9 +1,6 @@
 import re
-
 from bs4 import BeautifulSoup
 import requests
-import time
-
 
 def get_m3u8(head, url):
     # 忽略ssl警告
@@ -18,7 +15,7 @@ def get_m3u8(head, url):
     m3u8 = m3u8.replace(r'\/', '/')
     m3u8 = m3u8.encode('utf-8').decode('unicode_escape')
 
-    req = requests.get(m3u8,headers=head)
+    req = requests.get(m3u8, headers=head)
 
     datas = req.text.split('\n')
     if len(datas) < 5:
@@ -28,6 +25,6 @@ def get_m3u8(head, url):
         if cache[0:4] == 'http':
             m3u8 = cache
         else:
-            m3u8 = m3u8[:m3u8.rfind('/')+1]+cache
+            m3u8 = m3u8[:m3u8.rfind('/') + 1] + cache
 
     return m3u8

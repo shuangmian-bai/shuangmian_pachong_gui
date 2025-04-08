@@ -116,24 +116,7 @@ class MovieScraper:
         # 调用 get_ts_list.py 中的 get_ts_list 函数
         return get_ts_list(self.headers, m3u8)
 
-    def dow_mp4(self, ts_list, path, n,progress_signal,task_name,stop_flag):
+    def dow_mp4(self, ts_list, path, n, progress_signal, task_name, stop_flag):
         # 调用 dow_mp4.py 中的 dow_mp4 函数
-        dow_mp4(ts_list, path, n,progress_signal,task_name,stop_flag)
+        dow_mp4(ts_list, path, n, progress_signal, task_name, stop_flag)
 
-
-if __name__ == '__main__':
-    scraper = MovieScraper()
-    # 示例调用 get_ji 方法
-    # episode_info = scraper.get_ji('https://www.bnjxjd.com/xyz/15942.html')
-    # print(episode_info)
-
-    # 示例调用 get_m3u8 方法
-    m3u8_url = scraper.get_m3u8('https://www.bnjxjd.com/play/15942-2-1.html')
-
-    # # 示例调用 get_ts_list 方法
-    ts_list = scraper.get_ts_list(m3u8_url)
-    for i in ts_list:
-        print(i)
-    #
-    # # 示例调用 dow_mp4 方法
-    scraper.dow_mp4(ts_list, 'output.mp4', 200)

@@ -1,30 +1,11 @@
 import os
 import shutil
 import threading
-import time
-import requests
-from requests.exceptions import RequestException, ConnectionError
-from urllib3.exceptions import InsecureRequestWarning
+import time  # 导入 time 模块
+from utils import retry_request
 
 # 定义锁对象
 completed_files_lock = threading.Lock()
-
-def retry_request(url, max_retries=3, backoff_factor=5):
-    """尝试请求 URL，直到成功或达到最大重试次数"""
-    session = requests.Session()
-    retries = 0
-
-    while retries < max_retries:
-        try:
-            response = session.get(url, timeout=10, verify=False)
-            response.raise_for_status()  # 如果响应状态码不是 200，抛出异常
-            return response
-        except (ConnectionError, RequestException) as e:
-            retries += 1
-            if retries < max_retries:
-                time.sleep(backoff_factor)
-            else:
-                raise
 
 def download_ts(ts_url, file_path, semaphore, failed_urls, popup, task_name, completed_files, total_files, stop_flag):
     """下载单个 ts 文件"""
@@ -113,13 +94,13 @@ def concatenate_ts_files(output_dir, output_file):
 
 def dow_mp4(ts_list, path, n, popup, task_name, stop_flag):
     """主函数：下载并合并 TS 文件为 MP4"""
-    requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
+
     # 从参数中提取数据
     name = os.path.basename(path)
     base_path = os.path.dirname(path)
-    output_dir_name = os.path.splitext(name)[0]  # 去掉扩展名
-    output_dir = os.path.join(base_path, output_dir_name)
-    output_file = os.path.join(base_path, name)
+    output_dir_name = os.path.splitext(os.path.basename(path))[0]  # 去掉扩展名
+    output_dir = os.path.join(os.path.dirname(path), output_dir_name)
+    output_file = path
 
     # 确认路径存在
     os.makedirs(output_dir, exist_ok=True)

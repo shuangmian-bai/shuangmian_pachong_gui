@@ -2,6 +2,7 @@ import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QProgressBar, QLabel, QPushButton
 from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
+from progress_utils import update_task_completed_amount, set_task_amount
 
 
 class ProgressPopup(QDialog):
@@ -88,17 +89,11 @@ class ProgressPopup(QDialog):
 
     def set_task_amount(self, task_name, task_amount):
         """ 设置指定任务的任务量 """
-        if task_name in self.tasks:
-            idx = self.tasks.index(task_name)
-            self.task_amounts[idx] = task_amount
-            self.update_progress(idx)
+        set_task_amount(self, task_name, task_amount)
 
     def update_task_completed_amount(self, task_name, completed_amount):
         """ 更新指定任务的完成量 """
-        if task_name in self.tasks:
-            idx = self.tasks.index(task_name)
-            self.task_completed_amounts[idx] = completed_amount
-            self.update_progress(idx)
+        update_task_completed_amount(self, task_name, completed_amount)
 
     def update_progress(self, task_idx):
         """ 更新指定任务的进度条 """

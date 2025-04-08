@@ -1,6 +1,7 @@
 import re
 from bs4 import BeautifulSoup
 import requests
+import logging
 
 def get_m3u8(head, url):
     # 忽略ssl警告

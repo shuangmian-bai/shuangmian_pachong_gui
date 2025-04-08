@@ -3,7 +3,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLi
 from PyQt6.QtGui import QIcon, QFont, QIntValidator
 from configparser import ConfigParser, NoSectionError
 from utils import process_path
-
+import logging
 
 class SettingDialog(QDialog):
     def __init__(self):
@@ -14,7 +14,7 @@ class SettingDialog(QDialog):
         # 加载窗口图标
         window_icon = QIcon("static/icon/shuangmian.ico")
         if window_icon.isNull():
-            print("警告：窗口图标未正确加载！请检查路径：static/icon/shuangmian.ico")
+            logging.warning("警告：窗口图标未正确加载！请检查路径：static/icon/shuangmian.ico")
         else:
             self.setWindowIcon(window_icon)
 
@@ -26,34 +26,18 @@ class SettingDialog(QDialog):
         # 下载路径部分
         dow_path_layout = QHBoxLayout()
         self.dow_path_label = QLabel("下载路径:")
-        self.dow_path_label.setStyleSheet("""
-            font-size: 14px;
-            color: #333;
-        """)
+        self.dow_path_label.setStyleSheet("""font-size: 14px; color: #333;""")
         self.dow_path_input = QLineEdit()
-        self.dow_path_input.setStyleSheet("""
-            font-size: 14px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        """)
+        self.dow_path_input.setStyleSheet("""font-size: 14px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;""")
 
         # 加载文件夹图标
         folder_icon = QIcon("icon/folder.png")
         if folder_icon.isNull():
-            print("警告：文件夹图标未正确加载！请检查路径：icon/folder.png")
+            logging.warning("警告：文件夹图标未正确加载！请检查路径：icon/folder.png")
 
         self.dow_path_button = QPushButton("选择路径")
         self.dow_path_button.setIcon(folder_icon)
-        self.dow_path_button.setStyleSheet("""
-            font-size: 14px;
-            padding: 8px 16px;
-            background-color: #6c757d; /* 灰色 */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        """)
+        self.dow_path_button.setStyleSheet("""font-size: 14px; padding: 8px 16px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
         self.dow_path_button.clicked.connect(self.select_dow_path)
 
         dow_path_layout.addWidget(self.dow_path_label)
@@ -64,17 +48,9 @@ class SettingDialog(QDialog):
         # 并发数量部分
         n_layout = QHBoxLayout()
         self.n_label = QLabel("并发数量:")
-        self.n_label.setStyleSheet("""
-            font-size: 14px;
-            color: #333;
-        """)
+        self.n_label.setStyleSheet("""font-size: 14px; color: #333;""")
         self.n_input = QLineEdit()
-        self.n_input.setStyleSheet("""
-            font-size: 14px;
-            padding: 8px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        """)
+        self.n_input.setStyleSheet("""font-size: 14px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;""")
 
         # 添加验证器，限制只能输入大于0的整数
         validator = QIntValidator(1, 9999, self)  # 你可以根据需要调整范围
@@ -86,15 +62,7 @@ class SettingDialog(QDialog):
 
         # 保存按钮
         self.save_button = QPushButton("保存设置")
-        self.save_button.setStyleSheet("""
-            font-size: 16px;
-            padding: 10px 20px;
-            background-color: #6c757d; /* 灰色 */
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        """)
+        self.save_button.setStyleSheet("""font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
         self.save_button.clicked.connect(self.save_settings)
         self.layout.addWidget(self.save_button)
 
@@ -150,9 +118,9 @@ class SettingDialog(QDialog):
         try:
             with open(ini_file_path, 'w', encoding='utf-8') as configfile:
                 self.config.write(configfile)
-            print("设置已保存！")
+            logging.info("设置已保存！")
         except IOError as e:
-            print(f"文件写入失败: {e}")
+            logging.error(f"文件写入失败: {e}")
 
         self.accept()  # 关闭弹窗
 

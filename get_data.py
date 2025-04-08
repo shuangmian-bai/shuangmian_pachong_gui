@@ -4,6 +4,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dow_mp4 import dow_mp4  # 导入 dow_mp4 函数
 from get_m3u8 import get_m3u8  # 导入 get_m3u8 函数
 from get_ts_list import get_ts_list  # 导入 get_ts_list 函数
+import logging
 
 class MovieScraper:
     def __init__(self):
@@ -24,7 +25,7 @@ class MovieScraper:
             else:
                 return {}
         except Exception as e:
-            print(f"Error processing URL {url}: {e}")
+            logging.error(f"Error processing URL {url}: {e}")
             return {}
 
     def search_movies(self, query):
@@ -51,12 +52,12 @@ class MovieScraper:
                         result = future.result()
                         results.update(result)
                     except Exception as e:
-                        print(f"Error processing URL: {e}")
+                        logging.error(f"Error processing URL: {e}")
 
             return results
 
         except requests.RequestException as e:
-            print(f"Request failed: {e}")
+            logging.error(f"Request failed: {e}")
             return {}
 
     def fetch_url(self, url):
@@ -65,7 +66,7 @@ class MovieScraper:
             response.raise_for_status()
             return response.text
         except requests.RequestException as e:
-            print(f"Failed to fetch URL {url}: {e}")
+            logging.error(f"Failed to fetch URL {url}: {e}")
             return ""
 
     def process_result(self, result):
@@ -89,11 +90,11 @@ class MovieScraper:
                     url = f'{self.base_url}{cache1}'
                     re_data[text] = url
                 except (IndexError, AttributeError) as e:
-                    print(f"Error parsing movie data: {e}")
+                    logging.error(f"Error parsing movie data: {e}")
 
             return re_data
         except Exception as e:
-            print(f"Error processing result: {e}")
+            logging.error(f"Error processing result: {e}")
             return {}
 
     def get_ji(self, url):
@@ -114,10 +115,10 @@ class MovieScraper:
             return episode_data
 
         except requests.RequestException as e:
-            print(f"Request failed: {e}")
+            logging.error(f"Request failed: {e}")
             return {}
         except Exception as e:
-            print(f"Error processing episode data: {e}")
+            logging.error(f"Error processing episode data: {e}")
             return {}
 
     def get_m3u8(self, url):
@@ -131,4 +132,3 @@ class MovieScraper:
     def dow_mp4(self, ts_list, path, n, progress_signal, task_name, stop_flag):
         # 调用 dow_mp4.py 中的 dow_mp4 函数
         dow_mp4(ts_list, path, n, progress_signal, task_name, stop_flag)
-

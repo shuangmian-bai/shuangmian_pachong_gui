@@ -1,6 +1,7 @@
 import time
 import requests
 from bs4 import BeautifulSoup
+import logging
 
 def get_ts_list(head, m3u8):
     # 解析m3u8
@@ -9,7 +10,7 @@ def get_ts_list(head, m3u8):
     # 初始化返回列表
     ts_list = []
 
-    print('状态码为 : ', rel.status_code)
+    logging.info(f'状态码为 : {rel.status_code}')
 
     if rel.status_code == 200:
         # 看看有没有子地址
@@ -23,8 +24,8 @@ def get_ts_list(head, m3u8):
             else:
                 m3u8 = m3u8 + cache
 
-            print('发现子m3u8等待10s后继续')
-            print('m3u8地址为 : ', m3u8)
+            logging.info('发现子m3u8等待10s后继续')
+            logging.info(f'm3u8地址为 : {m3u8}')
             time.sleep(10)
             ts_list = get_ts_list(head, m3u8)
             return ts_list

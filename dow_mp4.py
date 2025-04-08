@@ -3,6 +3,9 @@ import shutil
 import threading
 import time  # 导入 time 模块
 from utils import retry_request
+import logging
+
+logger = logging.getLogger(__name__)
 
 # 定义锁对象
 completed_files_lock = threading.Lock()
@@ -20,14 +23,16 @@ def download_ts(ts_url, file_path, semaphore, failed_urls, popup, task_name, com
                         f.write(response.content)
                     with completed_files_lock:
                         completed_files[0] += 1
-                        print(completed_files[0])
+                        logger.info(f"Downloaded {file_path}")
                         popup.update_task_completed_amount(task_name, completed_files[0])  # 更新进度条
                     break
                 except Exception as e:
                     failed_urls.append(ts_url)
+                    logger.warning(f"Failed to download {ts_url}, retrying in 5 seconds")
                     time.sleep(5)  # 等待5秒后重试
         except Exception as e:
             failed_urls.append(ts_url)
+            logger.error(f"Failed to download {ts_url}: {e}")
 
 def download_ts_files(ts_list, output_dir, n, popup, task_name, stop_flag):
     """下载所有 ts 文件"""
@@ -77,19 +82,19 @@ def concatenate_ts_files(output_dir, output_file):
     """合并 ts 文件"""
     # 检查输出目录是否存在并且包含 .ts 文件
     if not os.path.exists(output_dir):
-        print(f"输出目录 {output_dir} 不存在")
+        logger.error(f"输出目录 {output_dir} 不存在")
         return
 
     ts_files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith('.ts')]
     if not ts_files:
-        print(f"输出目录 {output_dir} 不包含任何 .ts 文件")
+        logger.error(f"输出目录 {output_dir} 不包含任何 .ts 文件")
         return
 
     ts_files.sort()  # 确保文件按顺序合并
 
     # 使用 copy /b 命令合并 ts 文件，改为使用通配符 *.ts
     command = f'copy /b "{output_dir}\\*.ts" "{output_file}"'
-    print(command)
+    logger.info(command)
     os.system(command)
 
 def dow_mp4(ts_list, path, n, popup, task_name, stop_flag):
@@ -108,6 +113,7 @@ def dow_mp4(ts_list, path, n, popup, task_name, stop_flag):
     # 检查输出文件是否已经存在
     if os.path.exists(output_file):
         popup.update_task_completed_amount(task_name, len(ts_list))
+        logger.info(f"Output file {output_file} already exists")
         return
 
     # 设置任务总量
@@ -118,9 +124,10 @@ def dow_mp4(ts_list, path, n, popup, task_name, stop_flag):
 
     # 检查下载结果
     if failed_urls:
-        pass
+        logger.error(f"Failed to download the following URLs: {failed_urls}")
     else:
         # 合成 mp4 文件
         concatenate_ts_files(output_dir, output_file)
         # 删除 ts 文件
         shutil.rmtree(output_dir, ignore_errors=True)
+        logger.info(f"Downloaded and concatenated {output_file}")

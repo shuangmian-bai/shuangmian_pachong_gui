@@ -6,6 +6,8 @@ from get_m3u8 import get_m3u8  # 导入 get_m3u8 函数
 from get_ts_list import get_ts_list  # 导入 get_ts_list 函数
 import logging
 
+logger = logging.getLogger(__name__)
+
 class MovieScraper:
     def __init__(self):
         self.headers = {
@@ -25,7 +27,7 @@ class MovieScraper:
             else:
                 return {}
         except Exception as e:
-            logging.error(f"Error processing URL {url}: {e}")
+            logger.error(f"Error processing URL {url}: {e}")
             return {}
 
     def search_movies(self, query):
@@ -52,12 +54,12 @@ class MovieScraper:
                         result = future.result()
                         results.update(result)
                     except Exception as e:
-                        logging.error(f"Error processing URL: {e}")
+                        logger.error(f"Error processing URL: {e}")
 
             return results
 
         except requests.RequestException as e:
-            logging.error(f"Request failed: {e}")
+            logger.error(f"Request failed: {e}")
             return {}
 
     def fetch_url(self, url):
@@ -66,7 +68,7 @@ class MovieScraper:
             response.raise_for_status()
             return response.text
         except requests.RequestException as e:
-            logging.error(f"Failed to fetch URL {url}: {e}")
+            logger.error(f"Failed to fetch URL {url}: {e}")
             return ""
 
     def process_result(self, result):
@@ -90,11 +92,11 @@ class MovieScraper:
                     url = f'{self.base_url}{cache1}'
                     re_data[text] = url
                 except (IndexError, AttributeError) as e:
-                    logging.error(f"Error parsing movie data: {e}")
+                    logger.error(f"Error parsing movie data: {e}")
 
             return re_data
         except Exception as e:
-            logging.error(f"Error processing result: {e}")
+            logger.error(f"Error processing result: {e}")
             return {}
 
     def get_ji(self, url):
@@ -115,10 +117,10 @@ class MovieScraper:
             return episode_data
 
         except requests.RequestException as e:
-            logging.error(f"Request failed: {e}")
+            logger.error(f"Request failed: {e}")
             return {}
         except Exception as e:
-            logging.error(f"Error processing episode data: {e}")
+            logger.error(f"Error processing episode data: {e}")
             return {}
 
     def get_m3u8(self, url):

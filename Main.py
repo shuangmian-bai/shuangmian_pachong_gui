@@ -9,19 +9,23 @@ from set_ini import SettingDialog  # 导入 SettingDialog 类
 from search_popup import SearchPopup  # 导入搜索弹窗类
 from progress_popup import ProgressPopup  # 导入进度条弹窗类
 import logging
+from logging.handlers import RotatingFileHandler
 
 # 配置日志记录器，显式指定编码为 utf-8
 logger = logging.getLogger()
-logger.setLevel(logging.INFO)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+logger.setLevel(logging.DEBUG)  # 设置日志级别为 DEBUG
 
 # 创建文件处理器并设置编码
-file_handler = logging.FileHandler('app.log', encoding='utf-8')
-file_handler.setFormatter(formatter)
+file_handler = RotatingFileHandler('app.log', maxBytes=1024*1024*5, backupCount=5, encoding='utf-8')
+file_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(module)s - %(lineno)d - %(message)s'))
 
-# 将文件处理器添加到日志记录器
+# 创建控制台处理器
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(module)s - %(lineno)d - %(message)s'))
+
+# 将文件处理器和控制台处理器添加到日志记录器
 logger.addHandler(file_handler)
-
+logger.addHandler(console_handler)
 
 class SearchThread(QThread):
     search_finished = pyqtSignal(dict)  # 信号，用于通知搜索完成
@@ -34,7 +38,6 @@ class SearchThread(QThread):
     def run(self):
         results = self.movie_scraper.search_movies(self.query)
         self.search_finished.emit(results)  # 确保这里正确调用 emit
-
 
 class ProcessCheckButtonsThread(QThread):
     process_finished = pyqtSignal()  # 信号，用于通知处理完成
@@ -93,7 +96,6 @@ class ProcessCheckButtonsThread(QThread):
 
     def stop(self):
         self.stop_flag[0] = True  # 设置停止标志
-
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def __init__(self, button_data, is_radio=True):
@@ -256,7 +258,6 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
         # 退出应用程序
         exit()
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

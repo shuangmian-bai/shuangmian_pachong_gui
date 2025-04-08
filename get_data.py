@@ -15,6 +15,18 @@ class MovieScraper:
         cache = self.search_url.replace('.html', '')
         self.search_page_url_template = f'{cache}/page/{{}}/wd/{{}}.html'
 
+    def fetch_and_process_url(self, url):
+        """ 获取并处理 URL """
+        try:
+            response = self.fetch_url(url)
+            if response:
+                return self.process_result(response)
+            else:
+                return {}
+        except Exception as e:
+            print(f"Error processing URL {url}: {e}")
+            return {}
+
     def search_movies(self, query):
         try:
             req = requests.get(self.search_page_url_template.format(1, query), headers=self.headers)
@@ -32,12 +44,12 @@ class MovieScraper:
 
             # 使用多线程请求 url2_list
             with ThreadPoolExecutor(max_workers=5) as executor:
-                futures = [executor.submit(self.fetch_url, url) for url in url2_list]
+                futures = [executor.submit(self.fetch_and_process_url, url) for url in url2_list]
                 results = {}
                 for future in futures:
                     try:
                         result = future.result()
-                        results.update(self.process_result(result))
+                        results.update(result)
                     except Exception as e:
                         print(f"Error processing URL: {e}")
 

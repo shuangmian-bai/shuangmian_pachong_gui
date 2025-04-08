@@ -183,45 +183,24 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         print("处理复选框按钮完成")
         self.progress_popup.close()  # 关闭进度条弹窗
 
-    def handle_selected_radio_button(self, button):
-        # 处理单选按钮的逻辑
-        print(f"处理单选按钮: {button}")
-        self.selected_button = button  # 更新实例变量
+    def handle_selected_button(self, button, is_radio):
+        """ 处理选中的按钮 """
+        print(f"处理按钮: {button}")
         url1 = self.results[button]
         datas = self.movie_scraper.get_ji(url1)
         self.results = datas
-        self.process_results_and_update_ui(False)
-        # 在这里添加具体的处理逻辑
+        self.process_results_and_update_ui(not is_radio)
+
+    def handle_selected_radio_button(self, button):
+        # 处理单选按钮的逻辑
+        self.selected_button = button  # 更新实例变量
+        self.handle_selected_button(button, True)
 
     def handle_selected_check_buttons(self, buttons_list):
         # 处理多选按钮的逻辑
         for button in buttons_list:
             try:
-                cache = self.results[button]
-                # 调用 get_m3u8
-                m3u8 = self.movie_scraper.get_m3u8(cache)
-                if not m3u8:
-                    print(f"无法获取 m3u8 文件: {button}")
-                    continue
-
-                # 获取 ts 列表
-                ts_list = self.movie_scraper.get_ts_list(m3u8)
-                if not ts_list:
-                    print(f"无法获取 ts 列表: {button}")
-                    continue
-
-                # 读取 Settings.ini
-                settings_dialog = SettingDialog()
-                settings = settings_dialog.settings  # 直接使用 settings_dialog.settings
-                dow_path = settings.get('dow_path', './/') + self.selected_button + '__' + button + '.mp4'
-                n = int(settings.get('n', 150))  # 获取 n 参数并转换为整数
-
-                if not dow_path:
-                    print("下载路径未设置，无法下载视频")
-                    continue
-                # 下载视频
-                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}")  # 使用 n 参数
-                print(f"处理多选按钮: {button} 下载完成")
+                self.handle_selected_button(button, False)
             except Exception as e:
                 print(f"处理多选按钮: {button} 时发生错误: {e}")
 

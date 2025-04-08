@@ -71,7 +71,7 @@ class ProgressPopup(QDialog):
                     border: 1px solid #666;
                     border-radius: 5px;
                     background-color: #f0f0f0; /* 背景色 */
-                    color: #666; /* 文字颜色 */
+                    color: #333; /* 文字颜色 */
                     text-align: center;
                 }
                 QProgressBar::chunk {

@@ -116,9 +116,9 @@ class MovieScraper:
         # 调用 get_ts_list.py 中的 get_ts_list 函数
         return get_ts_list(self.headers, m3u8)
 
-    def dow_mp4(self, ts_list, path, n,progress_signal,task_name):
+    def dow_mp4(self, ts_list, path, n,progress_signal,task_name,stop_flag):
         # 调用 dow_mp4.py 中的 dow_mp4 函数
-        dow_mp4(ts_list, path, n,progress_signal,task_name)
+        dow_mp4(ts_list, path, n,progress_signal,task_name,stop_flag)
 
 
 if __name__ == '__main__':

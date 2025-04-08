@@ -34,11 +34,14 @@ class ProcessCheckButtonsThread(QThread):
         self.settings = settings
         self.gui_instance = gui_instance  # 传递 GUI 实例以访问其属性
         self.progress_popup = progress_popup
+        self.stop_flag = [False]  # 添加停止标志
 
     def run(self):
         total_tasks = len(self.selected_buttons)
         self.progress_popup.set_task_amount("总任务", total_tasks)  # 设置总任务量
         for index, button in enumerate(self.selected_buttons):
+            if self.stop_flag[0]:
+                break  # 如果停止标志被设置，则终止循环
             try:
                 cache = self.results[button]
                 # 调用 get_m3u8
@@ -65,7 +68,7 @@ class ProcessCheckButtonsThread(QThread):
                 print(f"下载路径: {dow_path}")
 
                 # 下载视频
-                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}")
+                self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}", self.stop_flag)
                 print(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
                 import traceback
@@ -74,6 +77,9 @@ class ProcessCheckButtonsThread(QThread):
             finally:
                 self.progress_popup.set_task_amount(f"下载 {button}", len(ts_list))
         self.process_finished.emit()
+
+    def stop(self):
+        self.stop_flag[0] = True  # 设置停止标志
 
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
@@ -240,7 +246,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def on_progress_popup_closed(self):
         print("进度条弹窗被关闭")
         if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
-            self.process_check_buttons_thread.terminate()
+            self.process_check_buttons_thread.stop()  # 设置停止标志
             QMessageBox.warning(self, "下载终止", "下载进程已终止")
 
     def closeEvent(self, event):
@@ -248,7 +254,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         if self.search_thread and self.search_thread.isRunning():
             self.search_thread.terminate()
         if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
-            self.process_check_buttons_thread.terminate()
+            self.process_check_buttons_thread.stop()  # 设置停止标志
 
         # # 退出应用程序
         exit()

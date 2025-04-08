@@ -72,7 +72,7 @@ class ProgressPopup(QDialog):
                     border-radius: 5px;
                     background-color: #f0f0f0; /* 背景色 */
                     color: #333; /* 文字颜色 */
-                    text-align: center;
+                    text-align: center; /* 文本对齐方式改为居中 */
                 }
                 QProgressBar::chunk {
                     background-color: #666; /* 进度条颜色 */
@@ -81,11 +81,15 @@ class ProgressPopup(QDialog):
                 }""")
             h_layout.addWidget(progress_bar)
 
+            # 添加百分比标签
+            percent_label = QLabel("0%")
+            h_layout.addWidget(percent_label)
+
             # 将水平布局添加到主布局
             main_layout.insertLayout(main_layout.count() - 1, h_layout)
 
             # 保存进度条引用
-            self.progress_bars.append(progress_bar)
+            self.progress_bars.append((progress_bar, percent_label))
 
     def set_task_amount(self, task_name, task_amount):
         """ 设置指定任务的任务量 """
@@ -110,7 +114,8 @@ class ProgressPopup(QDialog):
                 progress = 0
             else:
                 progress = (completed_amount / total_amount) * 100
-            self.progress_bars[task_idx].setValue(int(progress))
+            self.progress_bars[task_idx][0].setValue(int(progress))
+            self.progress_bars[task_idx][1].setText(f"{int(progress)}%")
 
     def clear_layout(self, layout):
         """ 清除布局中的所有子项 """
@@ -131,7 +136,7 @@ class ProgressPopup(QDialog):
         # 例如：self.parent().process_check_buttons_thread.terminate()
 
 
-#测试案例
+# 测试案例
 def test():
     import sys
     from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QProgressBar, QLabel, QPushButton

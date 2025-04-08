@@ -37,7 +37,6 @@ def download_ts(ts_url, file_path, semaphore, failed_urls, popup, task_name, com
                 f.write(response.content)
             with completed_files_lock:
                 completed_files[0] += 1
-                print(completed_files[0])
                 popup.update_task_completed_amount(task_name, completed_files[0])  # 更新进度条
         except Exception as e:
             failed_urls.append(ts_url)
@@ -88,13 +87,22 @@ def download_ts_files(ts_list, output_dir, n, popup, task_name):
 
 def concatenate_ts_files(output_dir, output_file):
     """合并 ts 文件"""
+    # 检查输出目录是否存在并且包含 .ts 文件
+    if not os.path.exists(output_dir):
+        print(f"输出目录 {output_dir} 不存在")
+        return
+
     ts_files = [os.path.join(output_dir, f) for f in os.listdir(output_dir) if f.endswith('.ts')]
+    if not ts_files:
+        print(f"输出目录 {output_dir} 不包含任何 .ts 文件")
+        return
+
     ts_files.sort()  # 确保文件按顺序合并
 
-    with open(output_file, 'wb') as outfile:
-        for ts_file in ts_files:
-            with open(ts_file, 'rb') as infile:
-                outfile.write(infile.read())
+    # 使用 copy /b 命令合并 ts 文件，改为使用通配符 *.ts
+    command = f'copy /b "{output_dir}\\*.ts" "{output_file}"'
+    print(command)
+    os.system(command)
 
 def dow_mp4(ts_list, path, n, popup, task_name):
     """主函数：下载并合并 TS 文件为 MP4"""

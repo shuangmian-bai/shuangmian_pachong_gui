@@ -10,8 +10,18 @@ from search_popup import SearchPopup  # 导入搜索弹窗类
 from progress_popup import ProgressPopup  # 导入进度条弹窗类
 import logging
 
-# 配置日志记录器
-logging.basicConfig(filename='app.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# 配置日志记录器，显式指定编码为 utf-8
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+# 创建文件处理器并设置编码
+file_handler = logging.FileHandler('app.log', encoding='utf-8')
+file_handler.setFormatter(formatter)
+
+# 将文件处理器添加到日志记录器
+logger.addHandler(file_handler)
+
 
 class SearchThread(QThread):
     search_finished = pyqtSignal(dict)  # 信号，用于通知搜索完成
@@ -50,13 +60,13 @@ class ProcessCheckButtonsThread(QThread):
                 # 调用 get_m3u8
                 m3u8 = self.movie_scraper.get_m3u8(cache)
                 if not m3u8:
-                    logging.info(f"无法获取 m3u8 文件: {button}")
+                    logger.info(f"无法获取 m3u8 文件: {button}")
                     continue
 
                 # 获取 ts 列表
                 ts_list = self.movie_scraper.get_ts_list(m3u8)
                 if not ts_list:
-                    logging.info(f"无法获取 ts 列表: {button}")
+                    logger.info(f"无法获取 ts 列表: {button}")
                     continue
 
                 # 构建下载路径
@@ -64,18 +74,18 @@ class ProcessCheckButtonsThread(QThread):
                 n = int(self.settings.get('n', 150))  # 获取 n 参数并转换为整数
 
                 if not dow_path:
-                    logging.info("下载路径未设置，无法下载视频")
+                    logger.info("下载路径未设置，无法下载视频")
                     continue
 
                 # 打印调试信息
-                logging.info(f"下载路径: {dow_path}")
+                logger.info(f"下载路径: {dow_path}")
 
                 # 下载视频
                 self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}", self.stop_flag)
-                logging.info(f"处理多选按钮: {button} 下载完成")
+                logger.info(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
                 import traceback
-                logging.error(f"处理多选按钮: {button} 时发生错误: {e}")
+                logger.error(f"处理多选按钮: {button} 时发生错误: {e}")
                 traceback.print_exc()  # 打印详细的错误堆栈信息
             finally:
                 self.progress_popup.set_task_amount(f"下载 {button}", len(ts_list))
@@ -100,13 +110,13 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.progress_popup.rejected.connect(self.on_progress_popup_closed)  # 连接 rejected 信号
 
     def on_search_clicked(self):
-        logging.info("自定义：搜索按钮被点击")
+        logger.info("自定义：搜索按钮被点击")
         query = self.search_input.text()
-        logging.info(f"搜索关键词: {query}")
+        logger.info(f"搜索关键词: {query}")
 
         # 检查输入是否为空或与上次输入相同
         if not query or query == self.last_query:
-            logging.info("输入为空或与上次输入相同，不做处理")
+            logger.info("输入为空或与上次输入相同，不做处理")
             return
 
         # 更新上次查询关键词
@@ -121,7 +131,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.search_thread.start()
 
     def on_search_finished(self, results):
-        logging.info("搜索完成")
+        logger.info("搜索完成")
         self.results = results
         self.process_results_and_update_ui(True)
 
@@ -129,7 +139,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 处理结果并更新UI的逻辑
         datas = pd.Series(self.results)
         cache = datas.index.to_list().copy()
-        logging.info(cache)
+        logger.info(cache)
 
         # 将 cache 转换成二维列表，每个子列表包含 10 个元素
         n = 10
@@ -143,16 +153,16 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
     def on_confirm_clicked(self):
         # 自定义确定按钮的逻辑
-        logging.info("自定义：确定按钮被点击")
+        logger.info("自定义：确定按钮被点击")
         selected_buttons = [button.text() for button in self.buttons if button.isChecked()]
 
         if not selected_buttons:
-            logging.info("没有选中的按钮，不做处理")
+            logger.info("没有选中的按钮，不做处理")
             return  # 如果没有选中任何按钮，则直接返回
 
         if self.is_radio:
             selected_button = selected_buttons[0]
-            logging.info(f"选中的单选按钮: {selected_button}")
+            logger.info(f"选中的单选按钮: {selected_button}")
 
             # 显示搜索弹窗
             self.search_popup.show_popup()
@@ -163,7 +173,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             # 关闭搜索弹窗
             self.search_popup.close_popup()
         else:
-            logging.info(f"选中的多选按钮列表: {selected_buttons}")
+            logger.info(f"选中的多选按钮列表: {selected_buttons}")
             # 读取 Settings.ini
             settings_dialog = SettingDialog()
             settings = settings_dialog.settings  # 直接使用 settings_dialog.settings
@@ -189,12 +199,12 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.last_query = None
 
     def on_process_finished(self):
-        logging.info("处理复选框按钮完成")
+        logger.info("处理复选框按钮完成")
         self.progress_popup.close()  # 关闭进度条弹窗
 
     def handle_selected_button(self, button, is_radio):
         """ 处理选中的按钮 """
-        logging.info(f"处理按钮: {button}")
+        logger.info(f"处理按钮: {button}")
         url1 = self.results[button]
         datas = self.movie_scraper.get_ji(url1)
         self.results = datas
@@ -211,7 +221,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             try:
                 self.handle_selected_button(button, False)
             except Exception as e:
-                logging.error(f"处理多选按钮: {button} 时发生错误: {e}")
+                logger.error(f"处理多选按钮: {button} 时发生错误: {e}")
 
     def show_settings_dialog(self):
         """显示设置对话框"""
@@ -219,7 +229,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         dialog.exec()
 
     def on_settings_clicked(self):
-        logging.info("设置按钮被点击")
+        logger.info("设置按钮被点击")
         self.show_settings_dialog()  # 调用显示设置对话框的方法
 
     def show_search_popup(self):
@@ -232,7 +242,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.progress_popup.update_task_completed_amount(task_name, completed)
 
     def on_progress_popup_closed(self):
-        logging.info("进度条弹窗被关闭")
+        logger.info("进度条弹窗被关闭")
         if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
             self.process_check_buttons_thread.stop()  # 设置停止标志
             QMessageBox.warning(self, "下载终止", "下载进程已终止")

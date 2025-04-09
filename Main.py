@@ -4,7 +4,7 @@ import pandas as pd
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PyQt6.QtCore import QThread, pyqtSignal
 from GuiMain import MovieCrawlerGUI
-from get_data import MovieScraper
+from movie_scraper import MovieScraper  # 更新导入路径
 from set_ini import SettingDialog  # 导入 SettingDialog 类
 from search_popup import SearchPopup  # 导入搜索弹窗类
 from progress_popup import ProgressPopup  # 导入进度条弹窗类

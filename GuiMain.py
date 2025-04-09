@@ -36,10 +36,26 @@ class MovieCrawlerGUI(QMainWindow):
         main_layout.setSpacing(15)  # 增加组件间距
         main_layout.setContentsMargins(20, 20, 20, 20)  # 边距保持不变
 
-        # 标题
-        title_label = QLabel("资源均来自于第三方接口,与本作者无关,切勿相信,如若被骗,概不负责", self)
-        title_label.setStyleSheet("""font-size: 24px; font-weight: bold; color: #333; margin-bottom: 20px; text-align: center;""")
-        main_layout.addWidget(title_label)
+        # 设置按钮
+        settings_button = QPushButton("设置", self)
+        settings_button.setStyleSheet("""font-size: 12px; padding: 5px 10px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
+        settings_button.setFixedSize(60, 30)
+        settings_button.clicked.connect(self.on_settings_clicked)
+
+        # 创建一个新的布局用于放置设置按钮
+        settings_layout = QHBoxLayout()
+        settings_layout.addStretch()
+        settings_layout.addWidget(settings_button)
+
+        # 版本信息
+        version_label = QLabel("双面的影视爬虫GUI", self)
+        version_label.setStyleSheet("""font-size: 14px; color: #666; text-align: center;""")
+        version_layout = QHBoxLayout()
+        version_layout.addStretch()
+        version_layout.addWidget(version_label)
+        version_layout.addLayout(settings_layout)
+
+        main_layout.addLayout(version_layout)
 
         # 搜索框
         search_layout = QHBoxLayout()
@@ -52,6 +68,8 @@ class MovieCrawlerGUI(QMainWindow):
         search_button.clicked.connect(self.on_search_clicked)
         search_layout.addWidget(self.search_input)
         search_layout.addWidget(search_button)
+
+        # 将搜索框添加到主布局
         main_layout.addLayout(search_layout)
 
         # 显示结果区域
@@ -103,14 +121,17 @@ class MovieCrawlerGUI(QMainWindow):
         confirm_button.setStyleSheet("""font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
         confirm_button.setFixedSize(100, 40)
         confirm_button.clicked.connect(self.on_confirm_clicked)
-        main_layout.addWidget(confirm_button, alignment=Qt.AlignmentFlag.AlignCenter)
 
-        # 设置按钮
-        settings_button = QPushButton("设置", self)
-        settings_button.setStyleSheet("""font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
-        settings_button.setFixedSize(100, 40)
-        settings_button.clicked.connect(self.on_settings_clicked)
-        main_layout.addWidget(settings_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        # 将确定按钮添加到主窗口左下角
+        bottom_left_layout = QHBoxLayout()
+        bottom_left_layout.addWidget(confirm_button)
+        bottom_left_layout.addStretch()
+        main_layout.addLayout(bottom_left_layout)
+
+        # 将免责声明添加到主窗口下方
+        disclaimer_label = QLabel("资源均来自于第三方接口,与本作者无关,切勿相信,如若被骗,概不负责", self)
+        disclaimer_label.setStyleSheet("""font-size: 14px; color: #666; text-align: center;""")
+        main_layout.addWidget(disclaimer_label)
 
     def update_buttons(self, selected_states=None):
         # 清空按钮区域

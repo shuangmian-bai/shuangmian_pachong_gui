@@ -5,6 +5,9 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 import logging
 
+from set_ini import SettingDialog
+
+
 class MovieCrawlerGUI(QMainWindow):
     def __init__(self, button_data, is_radio=True):
         super().__init__()
@@ -185,8 +188,15 @@ class MovieCrawlerGUI(QMainWindow):
     def update_button_data(self, new_button_data, is_radio):
         logging.info(new_button_data)
         self.is_radio = is_radio
-        self.button_data = new_button_data
-        self.total_pages = len(new_button_data)
+
+        # 获取每页展示数量
+        settings_dialog = SettingDialog()
+        settings = settings_dialog.settings
+        items_per_page = int(settings['items_per_page'])
+
+        # 将一维列表转换为二维列表
+        self.button_data = [new_button_data[i:i + items_per_page] for i in range(0, len(new_button_data), items_per_page)]
+        self.total_pages = len(self.button_data)
         self.current_page = 1
         self.update_page_info()
         self.update_buttons()

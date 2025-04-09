@@ -60,6 +60,21 @@ class SettingDialog(QDialog):
         n_layout.addWidget(self.n_input)
         self.layout.addLayout(n_layout)
 
+        # 每页展示数量部分
+        items_per_page_layout = QHBoxLayout()
+        self.items_per_page_label = QLabel("每页展示数量:")
+        self.items_per_page_label.setStyleSheet("""font-size: 14px; color: #333;""")
+        self.items_per_page_input = QLineEdit()
+        self.items_per_page_input.setStyleSheet("""font-size: 14px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;""")
+
+        # 添加验证器，限制只能输入大于0的整数
+        validator = QIntValidator(1, 9999, self)  # 你可以根据需要调整范围
+        self.items_per_page_input.setValidator(validator)
+
+        items_per_page_layout.addWidget(self.items_per_page_label)
+        items_per_page_layout.addWidget(self.items_per_page_input)
+        self.layout.addLayout(items_per_page_layout)
+
         # 保存按钮
         self.save_button = QPushButton("保存设置")
         self.save_button.setStyleSheet("""font-size: 16px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
@@ -76,6 +91,7 @@ class SettingDialog(QDialog):
         # 将当前设置显示在输入框中
         self.dow_path_input.setText(self.settings['dow_path'])
         self.n_input.setText(self.settings['n'])
+        self.items_per_page_input.setText(self.settings['items_per_page'])
 
     def load_settings(self):
         """加载设置"""
@@ -84,15 +100,16 @@ class SettingDialog(QDialog):
 
         if not os.path.exists(ini_file_path):
             with open(ini_file_path, 'w', encoding='utf-8') as configfile:
-                configfile.write("[Settings]\ndow_path=./下载/\nn=150\n")
+                configfile.write("[Settings]\ndow_path=./下载/\nn=150\nitems_per_page=10\n")
 
         self.config.read(ini_file_path, encoding='utf-8')  # 指定编码为 utf-8
 
         # 设置默认值
         dow_path = self.config.get('Settings', 'dow_path', fallback='./下载/')
         n = self.config.get('Settings', 'n', fallback='150')
+        items_per_page = self.config.get('Settings', 'items_per_page', fallback='10')
 
-        return {'dow_path': dow_path, 'n': n}
+        return {'dow_path': dow_path, 'n': n, 'items_per_page': items_per_page}
 
     def select_dow_path(self):
         """选择下载路径"""
@@ -105,6 +122,7 @@ class SettingDialog(QDialog):
         """保存设置到 ini 文件"""
         dow_path = self.dow_path_input.text()
         n = self.n_input.text()
+        items_per_page = self.items_per_page_input.text()
 
         dow_path = process_path(dow_path)
 
@@ -113,6 +131,7 @@ class SettingDialog(QDialog):
         ini_file_path = os.path.join(static_folder, 'Settings.ini')
         self.config.set('Settings', 'dow_path', dow_path)
         self.config.set('Settings', 'n', n)
+        self.config.set('Settings', 'items_per_page', items_per_page)
 
         # 写入文件
         try:

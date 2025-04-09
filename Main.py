@@ -146,15 +146,11 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         cache = datas.index.to_list().copy()
         logger.info(cache)
 
-        # 将 cache 转换成二维列表，每个子列表包含 10 个元素
-        n = 10
-        cache_2d = [cache[i:i + n] for i in range(0, len(cache), n)]
-
         # 关闭搜索弹窗
         self.search_popup.close_popup()
 
         # 更新按钮数据
-        self.update_button_data(cache_2d, is_radio)
+        self.update_button_data(cache, is_radio)
 
     def on_confirm_clicked(self):
         # 自定义确定按钮的逻辑

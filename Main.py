@@ -111,6 +111,9 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.progress_popup = ProgressPopup()  # 创建进度条弹窗实例
         self.progress_popup.rejected.connect(self.on_progress_popup_closed)  # 连接 rejected 信号
 
+        # 连接搜索框的 returnPressed 信号到 on_search_clicked 方法
+        self.search_input.returnPressed.connect(self.on_search_clicked)
+
     def on_search_clicked(self):
         logger.info("自定义：搜索按钮被点击")
         query = self.search_input.text()

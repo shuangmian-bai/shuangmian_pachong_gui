@@ -18,6 +18,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.button_group = QButtonGroup() if is_radio else None
         self.buttons = []
         self.selected_states = {}  # 用于保存按钮的选择状态
+        self.select_all_button = None  # 新增实例变量来存储“选择一页”按钮
         self.init_ui()
 
     def init_ui(self):
@@ -158,6 +159,19 @@ class MovieCrawlerGUI(QMainWindow):
             for button, state in zip(self.buttons, selected_states):
                 button.setChecked(state)
 
+        # 根据 is_radio 属性决定是否添加“选择一页”按钮
+        if not self.is_radio:
+            if self.select_all_button is None:
+                self.select_all_button = QPushButton("选择一页", self)
+                self.select_all_button.setStyleSheet("""font-size: 14px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
+                self.select_all_button.setFixedSize(100, 40)
+                self.select_all_button.clicked.connect(self.on_select_all_clicked)
+                self.button_layout.addWidget(self.select_all_button)
+        else:
+            if self.select_all_button is not None:
+                self.select_all_button.deleteLater()
+                self.select_all_button = None
+
     def on_search_clicked(self):
         logging.info("搜索按钮被点击")
         query = self.search_input.text()
@@ -202,6 +216,11 @@ class MovieCrawlerGUI(QMainWindow):
     def on_settings_clicked(self):
         logging.info("设置按钮被点击")
         # 这里可以添加设置按钮的逻辑
+
+    def on_select_all_clicked(self):
+        """ 处理选择一页按钮的点击事件 """
+        for button in self.buttons:
+            button.setChecked(True)
 
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")

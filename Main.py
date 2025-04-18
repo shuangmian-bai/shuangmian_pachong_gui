@@ -96,8 +96,8 @@ class ProcessCheckButtonsThread(QThread):
         self.process_finished.emit()
 
     def stop(self):
-        self.stop_flag[0] = True  # 设置停止标志
-        # 新增：终止所有活跃的子线程
+        """ 设置停止标志并终止所有活跃线程 """
+        self.stop_flag[0] = True
         for thread in self.active_threads:
             if thread.is_alive():
                 thread.join(timeout=5)  # 等待子线程最多 5 秒

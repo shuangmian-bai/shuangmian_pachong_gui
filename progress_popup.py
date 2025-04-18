@@ -140,6 +140,11 @@ class ProgressPopup(QDialog):
             parent.process_check_buttons_thread.stop()  # 设置停止标志
             logger.info("已发送停止信号给下载线程")
 
+    def closeEvent(self, event):
+        """ 在关闭弹窗时终止下载线程 """
+        self.terminate_download_threads()
+        super().closeEvent(event)
+
 # 测试案例
 def test():
     import sys

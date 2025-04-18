@@ -51,6 +51,7 @@ class ProcessCheckButtonsThread(QThread):
         self.gui_instance = gui_instance  # 传递 GUI 实例以访问其属性
         self.progress_popup = progress_popup
         self.stop_flag = [False]  # 添加停止标志
+        self.active_threads = []  # 新增：用于存储活跃的子线程
 
     def run(self):
         total_tasks = len(self.selected_buttons)
@@ -96,6 +97,16 @@ class ProcessCheckButtonsThread(QThread):
 
     def stop(self):
         self.stop_flag[0] = True  # 设置停止标志
+        # 新增：终止所有活跃的子线程
+        for thread in self.active_threads:
+            if thread.is_alive():
+                thread.join(timeout=5)  # 等待子线程最多 5 秒
+        logger.info("所有子线程已终止")
+
+    # 新增：注册活跃线程
+    def register_thread(self, thread):
+        self.active_threads.append(thread)
+
 
 class CustomMovieCrawlerGUI(MovieCrawlerGUI):
     def __init__(self, button_data, is_radio=True):

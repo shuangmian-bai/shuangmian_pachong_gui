@@ -33,6 +33,9 @@ class ProgressPopup(QDialog):
         # 设置主布局
         self.setLayout(main_layout)
 
+        # 新增：连接关闭事件到终止下载线程的方法
+        self.rejected.connect(self.terminate_download_threads)
+
     def set_task_names(self, task_names):
         """ 设置任务名称列表并更新UI """
         self.tasks = task_names
@@ -129,6 +132,13 @@ class ProgressPopup(QDialog):
         # 这里可以添加终止下载线程的逻辑
         # 例如：self.parent().process_check_buttons_thread.terminate()
 
+    # 新增：终止下载线程的方法
+    def terminate_download_threads(self):
+        """ 终止所有与下载相关的线程 """
+        parent = self.parent()
+        if hasattr(parent, "process_check_buttons_thread") and parent.process_check_buttons_thread:
+            parent.process_check_buttons_thread.stop()  # 设置停止标志
+            logger.info("已发送停止信号给下载线程")
 
 # 测试案例
 def test():

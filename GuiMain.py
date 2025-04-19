@@ -19,6 +19,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.buttons = []
         self.selected_states = {}  # 用于保存按钮的选择状态
         self.select_all_button = None  # 新增实例变量来存储“选择一页”按钮
+        self.results = {}  # 用于保存按钮对应的 m3u8 地址
         self.init_ui()
 
     def init_ui(self):
@@ -145,17 +146,36 @@ class MovieCrawlerGUI(QMainWindow):
             button.deleteLater()
         self.buttons.clear()
 
+        # 清空播放按钮和其他子布局
+        for i in reversed(range(self.button_layout.count())):
+            item = self.button_layout.itemAt(i)
+            if item.widget():
+                item.widget().deleteLater()
+            elif item.layout():
+                self.clear_layout(item.layout())  # 清理嵌套布局
+
         # 获取当前页的数据
         current_data = self.button_data[self.current_page - 1]
 
         # 创建按钮
         for text in current_data:
+            button_layout = QHBoxLayout()  # 创建水平布局
             if self.is_radio:
                 button = QRadioButton(text, self)
             else:
                 button = QCheckBox(text, self)
             self.buttons.append(button)
-            self.button_layout.addWidget(button)
+            button_layout.addWidget(button)  # 将按钮添加到水平布局
+
+            # 仅在多选框模式下添加播放按钮
+            if not self.is_radio:
+                play_button = QPushButton("播放", self)
+                play_button.setStyleSheet("""font-size: 12px; padding: 5px 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;""")
+                play_button.setFixedSize(60, 30)
+                play_button.clicked.connect(lambda _, t=text: self.on_play_button_clicked(t))  # 绑定点击事件
+                button_layout.addWidget(play_button)  # 将播放按钮添加到水平布局
+
+            self.button_layout.addLayout(button_layout)  # 将水平布局添加到按钮区域
             if self.is_radio:
                 self.button_group.addButton(button)
 
@@ -178,6 +198,16 @@ class MovieCrawlerGUI(QMainWindow):
             if self.select_all_button is not None:
                 self.select_all_button.deleteLater()
                 self.select_all_button = None
+
+    def clear_layout(self, layout):
+        """清除布局中的所有子项"""
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.deleteLater()
+            elif item.layout():
+                self.clear_layout(item.layout())  # 递归清理嵌套布局
 
     def on_search_clicked(self):
         logging.info("搜索按钮被点击")
@@ -229,6 +259,15 @@ class MovieCrawlerGUI(QMainWindow):
         for button in self.buttons:
             button.setChecked(True)
 
+    def on_play_button_clicked(self, button_text):
+        """处理播放按钮点击事件"""
+        logging.info(f"播放按钮被点击: {button_text}")
+        if hasattr(self, 'results') and button_text in self.results:
+            m3u8_url = self.results[button_text]
+            print(f"播放地址: {m3u8_url}")
+        else:
+            logging.warning(f"未找到对应的 m3u8 地址: {button_text}")
+
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")
 
@@ -264,3 +303,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

@@ -193,8 +193,7 @@ class MovieCrawlerGUI(QMainWindow):
                 self.select_all_button.setFixedSize(100, 40)
                 self.select_all_button.clicked.connect(self.on_select_all_clicked)
             # 确保“选择一页”按钮始终位于按钮区域的底部
-            if self.select_all_button not in [self.button_layout.itemAt(i).widget() for i in range(self.button_layout.count())]:
-                self.button_layout.addWidget(self.select_all_button, alignment=Qt.AlignmentFlag.AlignBottom)
+            self.button_layout.addWidget(self.select_all_button, alignment=Qt.AlignmentFlag.AlignBottom)
         else:
             if self.select_all_button is not None:
                 self.select_all_button.deleteLater()
@@ -298,9 +297,10 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     button_data = [
         ["按钮1", "按钮2", "按钮3"],
-        ["按钮4", "��钮5", "按钮6"],
+        ["按钮4", "按钮5", "按钮6"],
         ["按钮7", "按钮8", "按钮9"]
     ]
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

@@ -267,9 +267,12 @@ class MovieCrawlerGUI(QMainWindow):
         if hasattr(self, 'results') and button_text in self.results:
             m3u8_url = self.results[button_text]
             m3u8_url = m3u8_ts.get_m3u8({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-        },m3u8_url)
-            play_url = f"./static/bfq.html?m3u8={m3u8_url}"  # 构建播放接口 URL
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+            }, m3u8_url)
+
+            # 使用绝对路径构建播放接口 URL
+            play_file_path = os.path.abspath("./static/bfq.html")
+            play_url = f"file:///{play_file_path}?m3u8={m3u8_url}"  # 使用 file 协议
             logging.info(f"播放地址: {play_url}")
             os.system(f'start {play_url}')  # 使用系统命令打开播放页面
         else:

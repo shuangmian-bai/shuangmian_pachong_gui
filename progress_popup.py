@@ -13,10 +13,6 @@ class ProgressPopup(QDialog):
         self.setWindowTitle("进度条弹窗")
         self.setFixedSize(400, 300)
 
-        # 设置窗口图标
-        icon_path = QDir.current().filePath("static/icon/shuangmian.ico")  # 获取图标文件路径
-        self.setWindowIcon(QIcon(icon_path))  # 设置窗口图标
-
         # 布局管理
         main_layout = QVBoxLayout()
 
@@ -217,4 +213,3 @@ def test():
 
 if __name__ == '__main__':
     test()
-

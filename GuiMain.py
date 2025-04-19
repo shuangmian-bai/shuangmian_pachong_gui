@@ -26,9 +26,9 @@ class MovieCrawlerGUI(QMainWindow):
         self.setWindowTitle("双面的影视爬虫")
         self.setGeometry(100, 100, 800, 600)
 
-        # 设置窗口图标
-        icon_path = "static/icon/shuangmian.ico"
-        self.setWindowIcon(QIcon(icon_path))
+        # 移除单独设置窗口图标的代码
+        # icon_path = "static/icon/shuangmian.ico"
+        # self.setWindowIcon(QIcon(icon_path))
 
         # 主容器
         main_widget = QWidget()
@@ -252,3 +252,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

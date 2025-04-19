@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
 from PyQt6.QtCore import QThread, pyqtSignal
+from PyQt6.QtGui import QIcon  # 添加导入 QIcon
 from GuiMain import MovieCrawlerGUI
 from movie_scraper import MovieScraper  # 更新导入路径
 from set_ini import SettingDialog  # 导入 SettingDialog 类
@@ -34,6 +35,16 @@ def handle_exception(exc_type, exc_value, exc_traceback):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
     logger.error("未捕获的异常", exc_info=(exc_type, exc_value, exc_traceback))
+    
+    # 弹窗提醒用户
+    error_message = f"发生未捕获的异常:\n{exc_value}"
+    msg_box = QMessageBox()
+    msg_box.setIcon(QMessageBox.Icon.Critical)
+    msg_box.setWindowTitle("错误")
+    msg_box.setText("程序发生错误")
+    msg_box.setInformativeText(error_message)
+    msg_box.setStandardButtons(QMessageBox.StandardButton.Ok)
+    msg_box.exec()
 
 sys.excepthook = handle_exception
 
@@ -279,9 +290,15 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 退出应用程序
         exit()
 
+def set_global_icon(app):
+    """设置全局图标"""
+    icon_path = "static/icon/shuangmian.ico"
+    app.setWindowIcon(QIcon(icon_path))
+
 if __name__ == "__main__":
     try:
         app = QApplication(sys.argv)
+        set_global_icon(app)  # 调用全局图标设置
 
         # 定义按钮数据
         button_data = [

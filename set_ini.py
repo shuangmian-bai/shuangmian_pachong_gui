@@ -11,13 +11,6 @@ class SettingDialog(QDialog):
         self.setWindowTitle("设置")
         self.setFixedSize(400, 250)  # 设置窗口大小
 
-        # 加载窗口图标
-        window_icon = QIcon("static/icon/shuangmian.ico")
-        if window_icon.isNull():
-            logging.warning("警告：窗口图标未正确加载！请检查路径：static/icon/shuangmian.ico")
-        else:
-            self.setWindowIcon(window_icon)
-
         # 初始化布局
         self.layout = QVBoxLayout()
         self.layout.setSpacing(15)  # 增加组件间距
@@ -148,3 +141,4 @@ if __name__ == "__main__":
     app = QApplication([])
     dialog = SettingDialog()
     dialog.exec()
+

@@ -168,10 +168,12 @@ class MovieCrawlerGUI(QMainWindow):
         if not self.is_radio:
             if self.select_all_button is None:
                 self.select_all_button = QPushButton("选择一页", self)
-                self.select_all_button.setStyleSheet("""font-size: 14px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
+                self.select_all_button.setStyleSheet(
+                    """font-size: 14px; padding: 10px 20px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;""")
                 self.select_all_button.setFixedSize(100, 40)
                 self.select_all_button.clicked.connect(self.on_select_all_clicked)
-                self.button_layout.addWidget(self.select_all_button)
+            # 确保“选择一页”按钮始终位于按钮区域的底部
+            self.button_layout.addWidget(self.select_all_button, alignment=Qt.AlignmentFlag.AlignBottom)
         else:
             if self.select_all_button is not None:
                 self.select_all_button.deleteLater()

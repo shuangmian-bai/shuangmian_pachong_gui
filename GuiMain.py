@@ -6,6 +6,8 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHB
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 import logging
+from http.server import SimpleHTTPRequestHandler, HTTPServer  # 添加导入
+import threading  # 添加导入
 
 import m3u8_ts
 from set_ini import SettingDialog
@@ -23,6 +25,8 @@ class MovieCrawlerGUI(QMainWindow):
         self.selected_states = {}  # 用于保存按钮的选择状态
         self.select_all_button = None  # 新增实例变量来存储“选择一页”按钮
         self.results = {}  # 用于保存按钮对应的 m3u8 地址
+        self.http_server_thread = None  # 新增：HTTP 服务器线程
+        self.http_server_port = 8000  # 新增：HTTP 服务器端口
         self.init_ui()
 
     def init_ui(self):
@@ -47,7 +51,7 @@ class MovieCrawlerGUI(QMainWindow):
         settings_button.setFixedSize(60, 30)
         settings_button.clicked.connect(self.on_settings_clicked)
 
-        # 创建一个新的布局用于放置设置按钮
+        # 创建���个新的布局用于放置设置按钮
         settings_layout = QHBoxLayout()
         settings_layout.addStretch()
         settings_layout.addWidget(settings_button)
@@ -98,7 +102,7 @@ class MovieCrawlerGUI(QMainWindow):
         # 将按钮区域添加到 result_layout 中，并设置对齐方式为顶部对齐
         result_layout.addWidget(self.button_frame, alignment=Qt.AlignmentFlag.AlignTop)
 
-        # 将结果文���区域添加到 result_layout 中
+        # 将结果文本区域添加到 result_layout 中
         result_layout.addWidget(self.result_text)
 
         # 分页导航
@@ -176,7 +180,7 @@ class MovieCrawlerGUI(QMainWindow):
                 play_button.setStyleSheet("""font-size: 12px; padding: 5px 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;""")
                 play_button.setFixedSize(60, 30)
                 play_button.clicked.connect(lambda _, t=text: self.on_play_button_clicked(t))  # 绑定点击事件
-                button_layout.addWidget(play_button)  # 将播放按钮添加到水平布局
+                button_layout.addWidget(play_button)  # 将播放��钮添加到水平布局
 
             self.button_layout.addLayout(button_layout)  # 将水平布局添加到按钮区域
             if self.is_radio:
@@ -241,7 +245,7 @@ class MovieCrawlerGUI(QMainWindow):
             self.update_buttons(self.selected_states.get(self.current_page, []))
 
     def on_confirm_clicked(self):
-        logging.info("确定按钮被点击")
+        logging.info("确定��钮被点击")
         # 收集所有页的选中状态
         all_selected_buttons = []
         for page, states in self.selected_states.items():
@@ -262,6 +266,18 @@ class MovieCrawlerGUI(QMainWindow):
         for button in self.buttons:
             button.setChecked(True)
 
+    def start_http_server(self):
+        """启动 HTTP 服务器以提供静态文件"""
+        def run_server():
+            os.chdir("static")  # 切换到静态文件目录
+            handler = SimpleHTTPRequestHandler
+            httpd = HTTPServer(("127.0.0.1", self.http_server_port), handler)
+            logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{self.http_server_port}")
+            httpd.serve_forever()
+
+        self.http_server_thread = threading.Thread(target=run_server, daemon=True)
+        self.http_server_thread.start()
+
     def on_play_button_clicked(self, button_text):
         """处理播放按钮点击事件"""
         logging.info(f"播放按钮被点击: {button_text}")
@@ -271,12 +287,14 @@ class MovieCrawlerGUI(QMainWindow):
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }, m3u8_url)
 
-            # 使用 file 协议构造播放地址
-            play_file_path = os.path.abspath("./static/bfq.html")
-            encoded_m3u8_url = urllib.parse.quote(m3u8_url, safe='')  # 对 m3u8 参数进行 URL 编码
-            play_url = f"file:///{play_file_path}?m3u8={encoded_m3u8_url}"  # 使用 file 协议
+            # 启动 HTTP 服务器（如果尚未启动）
+            if not self.http_server_thread or not self.http_server_thread.is_alive():
+                self.start_http_server()
+
+            # 使用 127.0.0.1 构造播放地址
+            play_url = f"http://127.0.0.1:{self.http_server_port}/bfq.html?m3u8={urllib.parse.quote(m3u8_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
-            os.system(f'start "" "{play_url}"')  # 使用双引号包裹 URL，避免特殊字符问题
+            os.system(f'start "" "{play_url}"')  # 使用系统命令打开播放地址
         else:
             logging.warning(f"未找到对应的 m3u8 地址: {button_text}")
 
@@ -304,6 +322,12 @@ class MovieCrawlerGUI(QMainWindow):
         self.update_page_info()
         self.update_buttons()
 
+    def closeEvent(self, event):
+        # 确保 HTTP 服务器线程终止
+        if self.http_server_thread and self.http_server_thread.is_alive():
+            self.http_server_thread.join(timeout=5)
+        super().closeEvent(event)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -315,4 +339,3 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
-

@@ -5,6 +5,10 @@ from PyQt6.QtGui import QIcon
 from progress_utils import update_task_completed_amount, set_task_amount
 import traceback
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class ProgressPopup(QDialog):
     """ 进度条弹窗窗口 """

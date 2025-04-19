@@ -169,6 +169,9 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
     def on_search_finished(self, results):
         logger.info("搜索完成")
+        if not results:
+            QMessageBox.warning(self, "提示", "未找到相关资源，请尝试其他关键词")
+            return
         self.results = results
         self.process_results_and_update_ui(True)
 
@@ -313,4 +316,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
-

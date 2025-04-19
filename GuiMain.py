@@ -135,6 +135,11 @@ class MovieCrawlerGUI(QMainWindow):
         main_layout.addWidget(disclaimer_label)
 
     def update_buttons(self, selected_states=None):
+        # 检查当前页是否有数据，避免 IndexError
+        if self.current_page - 1 >= len(self.button_data):
+            logging.warning("当前页码超出范围，无法更新按钮")
+            return
+
         # 清空按钮区域
         for button in self.buttons:
             button.deleteLater()
@@ -238,6 +243,11 @@ class MovieCrawlerGUI(QMainWindow):
         self.button_data = [new_button_data[i:i + items_per_page] for i in range(0, len(new_button_data), items_per_page)]
         self.total_pages = len(self.button_data)
         self.current_page = 1
+
+        if not self.button_data:
+            logging.warning("没有可用的按钮数据")
+            self.button_data = [[]]  # 确保至少有一页空数据
+
         self.update_page_info()
         self.update_buttons()
 
@@ -252,4 +262,3 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
-

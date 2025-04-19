@@ -35,11 +35,11 @@ class MovieScraper:
             req.raise_for_status()  # 检查请求是否成功
             soup = BeautifulSoup(req.text, 'html.parser')
 
-            # 尝试获取总页数
-            try:
-                page = soup.select('body > div:nth-child(1) > div > div > div.stui-pannel__ft > ul > li:nth-child(7) > a')[0].get(
-                    'href').split('/')[3]
-            except IndexError:
+            # 修复解析总页数的逻辑
+            page_element = soup.select_one('body > div:nth-child(1) > div > div > div.stui-pannel__ft > ul > li:nth-last-child(2) > a')
+            if page_element:
+                page = page_element.get('href').split('/')[3]
+            else:
                 page = 1
 
             url2_list = [self.search_page_url_template.format(i, query) for i in range(1, int(page) + 1)]
@@ -144,3 +144,4 @@ class MovieScraper:
     def dow_mp4(self, ts_list, path, n, progress_signal, task_name, stop_flag):
         from downloader import dow_mp4
         dow_mp4(ts_list, path, n, progress_signal, task_name, stop_flag)
+

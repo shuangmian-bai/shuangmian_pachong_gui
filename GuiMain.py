@@ -1,10 +1,12 @@
 import sys
+import os
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 import logging
 
+import m3u8_ts
 from set_ini import SettingDialog
 
 
@@ -157,7 +159,7 @@ class MovieCrawlerGUI(QMainWindow):
         # 获取当前页的数据
         current_data = self.button_data[self.current_page - 1]
 
-        # 创建按钮
+        # 创建按���
         for text in current_data:
             button_layout = QHBoxLayout()  # 创建水平布局
             if self.is_radio:
@@ -264,7 +266,12 @@ class MovieCrawlerGUI(QMainWindow):
         logging.info(f"播放按钮被点击: {button_text}")
         if hasattr(self, 'results') and button_text in self.results:
             m3u8_url = self.results[button_text]
-            print(f"播放地址: {m3u8_url}")
+            m3u8_url = m3u8_ts.get_m3u8({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        },m3u8_url)
+            play_url = f"./static/bfq.html?m3u8={m3u8_url}"  # 构建播放接口 URL
+            logging.info(f"播放地址: {play_url}")
+            os.system(f'start {play_url}')  # 使用系统命令打开播放页面
         else:
             logging.warning(f"未找到对应的 m3u8 地址: {button_text}")
 
@@ -303,4 +310,3 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
-

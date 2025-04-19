@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>m3u8 Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* 保持视频比例并铺满整个区域 */
+        }
+    </style>
+</head>
+<body>
+    <video id="video" controls></video>
+    <script>
+        if (Hls.isSupported()) {
+            var video = document.getElementById('video');
+            var hls = new Hls();
+            var urlParams = new URLSearchParams(window.location.search);
+            var m3u8Url = urlParams.get('m3u8');
+            if (m3u8Url) {
+                hls.loadSource(m3u8Url);
+                hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    video.play();
+                });
+            } else {
+                console.error('No m3u8 URL provided');
+            }
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            var urlParams = new URLSearchParams(window.location.search);
+            var m3u8Url = urlParams.get('m3u8');
+            if (m3u8Url) {
+                video.src = m3u8Url;
+                video.addEventListener('canplay', function() {
+                    video.play();
+                });
+            } else {
+                console.error('No m3u8 URL provided');
+            }
+        }
+    </script>
+</body>
+</html>

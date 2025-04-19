@@ -1,5 +1,6 @@
 import sys
 import os
+import urllib.parse  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
 from PyQt6.QtCore import Qt
@@ -97,7 +98,7 @@ class MovieCrawlerGUI(QMainWindow):
         # 将按钮区域添加到 result_layout 中，并设置对齐方式为顶部对齐
         result_layout.addWidget(self.button_frame, alignment=Qt.AlignmentFlag.AlignTop)
 
-        # 将结果文本区域添加到 result_layout 中
+        # 将结果文���区域添加到 result_layout 中
         result_layout.addWidget(self.result_text)
 
         # 分页导航
@@ -159,7 +160,7 @@ class MovieCrawlerGUI(QMainWindow):
         # 获取当前页的数据
         current_data = self.button_data[self.current_page - 1]
 
-        # 创建按���
+        # 创建按钮
         for text in current_data:
             button_layout = QHBoxLayout()  # 创建水平布局
             if self.is_radio:
@@ -270,11 +271,12 @@ class MovieCrawlerGUI(QMainWindow):
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }, m3u8_url)
 
-            # 使用绝对路径构建播放接口 URL
+            # 使用 file 协议构造播放地址
             play_file_path = os.path.abspath("./static/bfq.html")
-            play_url = f"file:///{play_file_path}?m3u8={m3u8_url}"  # 使用 file 协议
+            encoded_m3u8_url = urllib.parse.quote(m3u8_url, safe='')  # 对 m3u8 参数进行 URL 编码
+            play_url = f"file:///{play_file_path}?m3u8={encoded_m3u8_url}"  # 使用 file 协议
             logging.info(f"播放地址: {play_url}")
-            os.system(f'start {play_url}')  # 使用系统命令打开播放页面
+            os.system(f'start "" "{play_url}"')  # 使用双引号包裹 URL，避免特殊字符问题
         else:
             logging.warning(f"未找到对应的 m3u8 地址: {button_text}")
 
@@ -313,3 +315,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

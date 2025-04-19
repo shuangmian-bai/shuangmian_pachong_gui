@@ -10,6 +10,7 @@ from search_popup import SearchPopup  # 导入搜索弹窗类
 from progress_popup import ProgressPopup  # 导入进度条弹窗类
 import logging
 from logging.handlers import RotatingFileHandler
+import traceback
 
 # 配置日志记录器，显式指定编码为 utf-8
 logger = logging.getLogger()
@@ -26,6 +27,15 @@ console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(
 # 将文件处理器和控制台处理器添加到日志记录器
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
+
+# 添加全局异常捕获
+def handle_exception(exc_type, exc_value, exc_traceback):
+    if issubclass(exc_type, KeyboardInterrupt):
+        sys.__excepthook__(exc_type, exc_value, exc_traceback)
+        return
+    logger.error("未捕获的异常", exc_info=(exc_type, exc_value, exc_traceback))
+
+sys.excepthook = handle_exception
 
 class SearchThread(QThread):
     search_finished = pyqtSignal(dict)  # 信号，用于通知搜索完成
@@ -270,15 +280,20 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         exit()
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
+    try:
+        app = QApplication(sys.argv)
 
-    # 定义按钮数据
-    button_data = [
-        []
-    ]
+        # 定义按钮数据
+        button_data = [
+            []
+        ]
 
-    # 创建窗口实例
-    window = CustomMovieCrawlerGUI(button_data, is_radio=True)
-    window.show()
+        # 创建窗口实例
+        window = CustomMovieCrawlerGUI(button_data, is_radio=True)
+        window.show()
 
-    sys.exit(app.exec())
+        sys.exit(app.exec())
+    except Exception as e:
+        logger.error("主程序发生异常", exc_info=True)
+        traceback.print_exc()
+

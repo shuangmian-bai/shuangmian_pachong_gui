@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QPr
 from PyQt6.QtCore import QDir
 from PyQt6.QtGui import QIcon
 from progress_utils import update_task_completed_amount, set_task_amount
+import traceback
 
 
 class ProgressPopup(QDialog):
@@ -135,10 +136,14 @@ class ProgressPopup(QDialog):
     # 新增：终止下载线程的方法
     def terminate_download_threads(self):
         """ 终止所有与下载相关的线程 """
-        parent = self.parent()
-        if hasattr(parent, "process_check_buttons_thread") and parent.process_check_buttons_thread:
-            parent.process_check_buttons_thread.stop()  # 设置停止标志
-            logger.info("已发送停止信号给下载线程")
+        try:
+            parent = self.parent()
+            if hasattr(parent, "process_check_buttons_thread") and parent.process_check_buttons_thread:
+                parent.process_check_buttons_thread.stop()  # 设置停止标志
+                logger.info("已发送停止信号给下载线程")
+        except Exception as e:
+            logger.error("终止下载线程时发生错误", exc_info=True)
+            traceback.print_exc()
 
     def closeEvent(self, event):
         """ 在关闭弹窗时终止下载线程 """
@@ -212,3 +217,4 @@ def test():
 
 if __name__ == '__main__':
     test()
+

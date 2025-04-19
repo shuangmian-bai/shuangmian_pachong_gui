@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import traceback
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,8 @@ class MovieScraper:
             else:
                 return {}
         except Exception as e:
-            logger.error(f"Error processing URL {url}: {e}")
+            logger.error(f"处理 URL {url} 时发生错误", exc_info=True)
+            traceback.print_exc()
             return {}
 
     def search_movies(self, query):
@@ -51,12 +53,18 @@ class MovieScraper:
                         result = future.result()
                         results.update(result)
                     except Exception as e:
-                        logger.error(f"Error processing URL: {e}")
+                        logger.error(f"Error processing URL: {e}", exc_info=True)
+                        traceback.print_exc()
 
             return results
 
         except requests.RequestException as e:
-            logger.error(f"Request failed: {e}")
+            logger.error(f"请求失败: {e}", exc_info=True)
+            traceback.print_exc()
+            return {}
+        except Exception as e:
+            logger.error("搜索电影时发生未知错误", exc_info=True)
+            traceback.print_exc()
             return {}
 
     def fetch_url(self, url):
@@ -65,7 +73,8 @@ class MovieScraper:
             response.raise_for_status()
             return response.text
         except requests.RequestException as e:
-            logger.error(f"Failed to fetch URL {url}: {e}")
+            logger.error(f"Failed to fetch URL {url}: {e}", exc_info=True)
+            traceback.print_exc()
             return ""
 
     def process_result(self, result):
@@ -89,11 +98,13 @@ class MovieScraper:
                     url = f'{self.base_url}{cache1}'
                     re_data[text] = url
                 except (IndexError, AttributeError) as e:
-                    logger.error(f"Error parsing movie data: {e}")
+                    logger.error(f"Error parsing movie data: {e}", exc_info=True)
+                    traceback.print_exc()
 
             return re_data
         except Exception as e:
-            logger.error(f"Error processing result: {e}")
+            logger.error(f"Error processing result: {e}", exc_info=True)
+            traceback.print_exc()
             return {}
 
     def get_ji(self, url):
@@ -114,10 +125,12 @@ class MovieScraper:
             return episode_data
 
         except requests.RequestException as e:
-            logger.error(f"Request failed: {e}")
+            logger.error(f"Request failed: {e}", exc_info=True)
+            traceback.print_exc()
             return {}
         except Exception as e:
-            logger.error(f"Error processing episode data: {e}")
+            logger.error(f"Error processing episode data: {e}", exc_info=True)
+            traceback.print_exc()
             return {}
 
     def get_m3u8(self, url):

@@ -273,7 +273,18 @@ class MovieCrawlerGUI(QMainWindow):
             handler = partial(SimpleHTTPRequestHandler, directory=static_dir)  # 指定静态文件目录
             httpd = HTTPServer(("127.0.0.1", self.http_server_port), handler)
             logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{self.http_server_port}")
-            httpd.serve_forever()
+            try:
+                httpd.serve_forever()
+            except Exception as e:
+                logging.error(f"HTTP 服务器运行时发生错误: {e}")
+            finally:
+                httpd.server_close()
+                logging.info("HTTP 服务器已关闭")
+
+        # 如果线程已存在且仍在运行，先关闭它
+        if self.http_server_thread and self.http_server_thread.is_alive():
+            logging.info("正在关闭现有的 HTTP 服务器线程...")
+            self.http_server_thread.join(timeout=5)
 
         static_dir = os.path.join(os.getcwd(), "static")  # 使用绝对路径
         self.http_server_thread = threading.Thread(target=run_server, args=(static_dir,), daemon=True)
@@ -288,9 +299,8 @@ class MovieCrawlerGUI(QMainWindow):
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }, m3u8_url)
 
-            # 启动 HTTP 服务器（如果尚未启动）
-            if not self.http_server_thread or not self.http_server_thread.is_alive():
-                self.start_http_server()
+            # 每次播放前重新启动 HTTP 服务器
+            self.start_http_server()
 
             # 使用 127.0.0.1 构造播放地址
             play_url = f"http://127.0.0.1:{self.http_server_port}/bfq.html?m3u8={urllib.parse.quote(m3u8_url, safe='')}"
@@ -326,6 +336,7 @@ class MovieCrawlerGUI(QMainWindow):
     def closeEvent(self, event):
         # 确保 HTTP 服务器线程终止
         if self.http_server_thread and self.http_server_thread.is_alive():
+            logging.info("正在关闭 HTTP 服务器线程...")
             self.http_server_thread.join(timeout=5)
         super().closeEvent(event)
 

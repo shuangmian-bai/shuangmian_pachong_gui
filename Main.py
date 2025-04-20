@@ -343,7 +343,7 @@ if __name__ == "__main__":
     try:
         # 输出当前时间到日志
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        logger.info(f"---------当前时间------------ {current_time}")
+        logger.info(f"---------------------------------------------------当前时间--------------------------------------------------- {current_time}")
 
         app = QApplication(sys.argv)
         set_global_icon(app)  # 调用全局图标设置

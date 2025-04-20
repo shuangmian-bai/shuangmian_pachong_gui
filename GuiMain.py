@@ -5,12 +5,54 @@ from functools import partial  # 添加导入
 import time  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QIcon
 import logging
 
 import m3u8_ts
 from set_ini import SettingDialog
+
+
+class PlayThread(QThread):
+    """多线程处理播放逻辑"""
+    play_finished = pyqtSignal(str)  # 信号，用于通知播放完成
+
+    def __init__(self, button_text, video_url, results):
+        super().__init__()
+        self.button_text = button_text
+        self.video_url = video_url
+        self.results = results
+
+    def run(self):
+        import urllib.parse
+        import os
+        import m3u8_ts
+
+        try:
+            # 如果地址已经是 m3u8，则直接使用
+            if self.video_url.endswith('.m3u8'):
+                play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(self.video_url, safe='')}"
+                os.system(f'start "" "{play_url}"')
+                return
+
+            # 解析 m3u8 地址
+            m3u8_url = m3u8_ts.get_m3u8(
+                {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'},
+                self.video_url
+            )
+
+            # 更新结果字典，替换为 m3u8 地址
+            self.results[self.button_text] = m3u8_url
+
+            # 使用新的解析器 URL
+            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(m3u8_url, safe='')}"
+            os.system(f'start "" "{play_url}"')
+        except Exception as e:
+            logging.error(f"播放线程发生错误: {e}")
+
+    def stop(self):
+        """停止线程"""
+        self.terminate()
 
 
 class MovieCrawlerGUI(QMainWindow):
@@ -26,6 +68,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.select_all_button = None  # 新增实例变量来存储“选择一页”按钮
         self.results = {}  # 用于保存按钮对应的 m3u8 地址
         self.last_play_click_time = {}  # 新增：记录每个按钮的最后点击时间
+        self.play_threads = {}  # 用于存储播放线程
         self.init_ui()
 
     def init_ui(self):
@@ -276,31 +319,25 @@ class MovieCrawlerGUI(QMainWindow):
 
         self.last_play_click_time[button_text] = current_time  # 更新最后点击时间
         logging.info(f"播放按钮被点击: {button_text}")
+
+        if button_text in self.play_threads and self.play_threads[button_text].isRunning():
+            logging.info(f"播放线程正在运行: {button_text}")
+            return
+
         if hasattr(self, 'results') and button_text in self.results:
             video_url = self.results[button_text]
-            # 如果地址已经是 m3u8，则直接使用
-            if video_url.endswith('.m3u8'):
-                play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
-                logging.info(f"播放地址: {play_url}")
-                os.system(f'start "" "{play_url}"')  # 使用系统命令打开播放地址
-                return
-
-            # 解析 m3u8 地址
-            m3u8_url = m3u8_ts.get_m3u8(
-                {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'},
-                video_url
-            )
-
-            # 更新结果字典，替换为 m3u8 地址
-            self.results[button_text] = m3u8_url
-            logging.info(f"解析后的 m3u8 地址已更新: {m3u8_url}")
-
-            # 使用新的解析器 URL
-            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(m3u8_url, safe='')}"
-            logging.info(f"播放地址: {play_url}")
-            os.system(f'start "" "{play_url}"')  # 使用系统命令打开播放地址
+            play_thread = PlayThread(button_text, video_url, self.results)
+            play_thread.play_finished.connect(self.on_play_finished)
+            self.play_threads[button_text] = play_thread
+            play_thread.start()
         else:
             logging.warning(f"未找到对应的视频地址: {button_text}")
+
+    def on_play_finished(self, button_text):
+        """播放完成的回调"""
+        logging.info(f"播放完成: {button_text}")
+        if button_text in self.play_threads:
+            del self.play_threads[button_text]
 
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")
@@ -328,7 +365,9 @@ class MovieCrawlerGUI(QMainWindow):
 
     def closeEvent(self, event):
         """确保资源在关闭时被释放"""
-        # 调用父类的 closeEvent 方法
+        for thread in self.play_threads.values():
+            if thread.isRunning():
+                thread.stop()
         super().closeEvent(event)
 
 

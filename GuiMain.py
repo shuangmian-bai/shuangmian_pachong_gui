@@ -10,6 +10,7 @@ import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer  # 添加导入
 import threading  # 添加导入
 from socketserver import ThreadingMixIn  # 添加导入
+import socket  # 添加导入
 
 import m3u8_ts
 from set_ini import SettingDialog
@@ -276,10 +277,10 @@ class MovieCrawlerGUI(QMainWindow):
 
     def start_http_server(self):
         """启动 HTTP 服务器以提供静态文件"""
-        def run_server(static_dir):
+        def run_server(static_dir, port):
             handler = partial(SimpleHTTPRequestHandler, directory=static_dir)  # 指定静态文件目录
-            httpd = ThreadedHTTPServer(("127.0.0.1", self.http_server_port), handler)  # 使用多线程 HTTP 服务器
-            logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{self.http_server_port}")
+            httpd = ThreadedHTTPServer(("127.0.0.1", port), handler)  # 使用多线程 HTTP 服务器
+            logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{port}")
             try:
                 httpd.serve_forever()
             except Exception as e:
@@ -293,8 +294,13 @@ class MovieCrawlerGUI(QMainWindow):
             logging.info("正在关闭现有的 HTTP 服务器线程...")
             self.http_server_thread.join(timeout=5)
 
+        # 动态分配空闲端口
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", 0))  # 绑定到端口 0，操作系统会分配一个空闲端口
+            self.http_server_port = s.getsockname()[1]  # 获取分配的端口号
+
         static_dir = os.path.join(os.getcwd(), "static")  # 使用绝对路径
-        self.http_server_thread = threading.Thread(target=run_server, args=(static_dir,), daemon=True)
+        self.http_server_thread = threading.Thread(target=run_server, args=(static_dir, self.http_server_port), daemon=True)
         self.http_server_thread.start()
 
     def on_play_button_clicked(self, button_text):

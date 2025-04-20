@@ -28,6 +28,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.results = {}  # 用于保存按钮对应的 m3u8 地址
         self.http_server_thread = None  # 新增：HTTP 服务器线程
         self.http_server_port = 8000  # 新增：HTTP 服务器端口
+        self.start_http_server()  # 在初始化时启动 HTTP 服务
         self.init_ui()
 
     def init_ui(self):
@@ -299,9 +300,6 @@ class MovieCrawlerGUI(QMainWindow):
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
             }, m3u8_url)
 
-            # 每次播放前重新启动 HTTP 服务器
-            self.start_http_server()
-
             # 使用 127.0.0.1 构造播放地址
             play_url = f"http://127.0.0.1:{self.http_server_port}/bfq.html?m3u8={urllib.parse.quote(m3u8_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
@@ -351,4 +349,3 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
-

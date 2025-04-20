@@ -34,6 +34,8 @@ def handle_exception(exc_type, exc_value, exc_traceback):
     if issubclass(exc_type, KeyboardInterrupt):
         sys.__excepthook__(exc_type, exc_value, exc_traceback)
         return
+    if issubclass(exc_type, SystemExit):  # 如果是 SystemExit 异常，直接返回
+        return
     logger.error("未捕获的异常", exc_info=(exc_type, exc_value, exc_traceback))
     
     # 弹窗提醒用户
@@ -316,3 +318,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
+

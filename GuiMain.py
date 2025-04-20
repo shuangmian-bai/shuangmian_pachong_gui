@@ -2,6 +2,7 @@ import sys
 import os
 import urllib.parse  # 添加导入
 from functools import partial  # 添加导入
+import time  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
 from PyQt6.QtCore import Qt
@@ -24,6 +25,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.selected_states = {}  # 用于保存按钮的选择状态
         self.select_all_button = None  # 新增实例变量来存储“选择一页”按钮
         self.results = {}  # 用于保存按钮对应的 m3u8 地址
+        self.last_play_click_time = {}  # 新增：记录每个按钮的最后点击时间
         self.init_ui()
 
     def init_ui(self):
@@ -265,6 +267,14 @@ class MovieCrawlerGUI(QMainWindow):
 
     def on_play_button_clicked(self, button_text):
         """处理播放按钮点击事件"""
+        current_time = time.time()
+        if button_text in self.last_play_click_time:
+            elapsed_time = current_time - self.last_play_click_time[button_text]
+            if elapsed_time < 5:  # 限制为5秒内不能重复点击
+                logging.warning(f"播放按钮点击过于频繁: {button_text}")
+                return
+
+        self.last_play_click_time[button_text] = current_time  # 更新最后点击时间
         logging.info(f"播放按钮被点击: {button_text}")
         if hasattr(self, 'results') and button_text in self.results:
             video_url = self.results[button_text]
@@ -332,3 +342,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

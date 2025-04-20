@@ -293,7 +293,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             self.process_check_buttons_thread.stop()  # 设置停止标志
 
         # 退出应用程序
-        exit()
+        sys.exit()
 
 def set_global_icon(app):
     """设置全局图标"""
@@ -318,4 +318,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
-

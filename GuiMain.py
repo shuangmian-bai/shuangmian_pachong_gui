@@ -9,9 +9,15 @@ from PyQt6.QtGui import QIcon
 import logging
 from http.server import SimpleHTTPRequestHandler, HTTPServer  # 添加导入
 import threading  # 添加导入
+from socketserver import ThreadingMixIn  # 添加导入
 
 import m3u8_ts
 from set_ini import SettingDialog
+
+
+class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
+    """支持多线程的 HTTP 服务器"""
+    daemon_threads = True  # 确保线程在主线程退出时终止
 
 
 class MovieCrawlerGUI(QMainWindow):
@@ -272,7 +278,7 @@ class MovieCrawlerGUI(QMainWindow):
         """启动 HTTP 服务器以提供静态文件"""
         def run_server(static_dir):
             handler = partial(SimpleHTTPRequestHandler, directory=static_dir)  # 指定静态文件目录
-            httpd = HTTPServer(("127.0.0.1", self.http_server_port), handler)
+            httpd = ThreadedHTTPServer(("127.0.0.1", self.http_server_port), handler)  # 使用多线程 HTTP 服务器
             logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{self.http_server_port}")
             try:
                 httpd.serve_forever()
@@ -349,3 +355,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

@@ -1,6 +1,7 @@
 import sys
 import os
 import urllib.parse  # 添加导入
+from functools import partial  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
 from PyQt6.QtCore import Qt
@@ -51,7 +52,7 @@ class MovieCrawlerGUI(QMainWindow):
         settings_button.setFixedSize(60, 30)
         settings_button.clicked.connect(self.on_settings_clicked)
 
-        # 创建���个新的布局用于放置设置按钮
+        # 创建一个新的布局用于放置设置按钮
         settings_layout = QHBoxLayout()
         settings_layout.addStretch()
         settings_layout.addWidget(settings_button)
@@ -180,7 +181,7 @@ class MovieCrawlerGUI(QMainWindow):
                 play_button.setStyleSheet("""font-size: 12px; padding: 5px 10px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;""")
                 play_button.setFixedSize(60, 30)
                 play_button.clicked.connect(lambda _, t=text: self.on_play_button_clicked(t))  # 绑定点击事件
-                button_layout.addWidget(play_button)  # 将播放��钮添加到水平布局
+                button_layout.addWidget(play_button)  # 将播放按钮添加到水平布局
 
             self.button_layout.addLayout(button_layout)  # 将水平布局添加到按钮区域
             if self.is_radio:
@@ -245,7 +246,7 @@ class MovieCrawlerGUI(QMainWindow):
             self.update_buttons(self.selected_states.get(self.current_page, []))
 
     def on_confirm_clicked(self):
-        logging.info("确定��钮被点击")
+        logging.info("确定按钮被点击")
         # 收集所有页的选中状态
         all_selected_buttons = []
         for page, states in self.selected_states.items():
@@ -268,14 +269,14 @@ class MovieCrawlerGUI(QMainWindow):
 
     def start_http_server(self):
         """启动 HTTP 服务器以提供静态文件"""
-        def run_server():
-            os.chdir("static")  # 切换到静态文件目录
-            handler = SimpleHTTPRequestHandler
+        def run_server(static_dir):
+            handler = partial(SimpleHTTPRequestHandler, directory=static_dir)  # 指定静态文件目录
             httpd = HTTPServer(("127.0.0.1", self.http_server_port), handler)
             logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{self.http_server_port}")
             httpd.serve_forever()
 
-        self.http_server_thread = threading.Thread(target=run_server, daemon=True)
+        static_dir = os.path.join(os.getcwd(), "static")  # 使用绝对路径
+        self.http_server_thread = threading.Thread(target=run_server, args=(static_dir,), daemon=True)
         self.http_server_thread.start()
 
     def on_play_button_clicked(self, button_text):
@@ -339,3 +340,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

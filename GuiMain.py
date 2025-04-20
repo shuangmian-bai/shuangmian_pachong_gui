@@ -310,6 +310,7 @@ class MovieCrawlerGUI(QMainWindow):
 
     def on_play_button_clicked(self, button_text):
         """处理播放按钮点击事件"""
+        logging.info(self.results[button_text])
         current_time = time.time()
         if button_text in self.last_play_click_time:
             elapsed_time = current_time - self.last_play_click_time[button_text]

@@ -12,6 +12,7 @@ from progress_popup import ProgressPopup  # 导入进度条弹窗类
 import logging
 from logging.handlers import RotatingFileHandler
 import traceback
+import datetime  # 添加导入 datetime 模块
 
 # 配置日志记录器，显式指定编码为 utf-8
 logger = logging.getLogger()
@@ -316,6 +317,10 @@ def set_global_icon(app):
 
 if __name__ == "__main__":
     try:
+        # 输出当前时间到日志
+        current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        logger.info(f"---------当前时间------------ {current_time}")
+
         app = QApplication(sys.argv)
         set_global_icon(app)  # 调用全局图标设置
 
@@ -332,3 +337,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
+

@@ -144,6 +144,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.process_check_buttons_thread = None  # 初始化处理复选框按钮的线程
         self.progress_popup = ProgressPopup()  # 创建进度条弹窗实例
         self.progress_popup.rejected.connect(self.on_progress_popup_closed)  # 连接 rejected 信号
+        self.http_server_thread = None  # 初始化 HTTP 服务器线程
 
         # 连接搜索框的 returnPressed 信号到 on_search_clicked 方法
         self.search_input.returnPressed.connect(self.on_search_clicked)
@@ -286,14 +287,27 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
             QMessageBox.warning(self, "下载终止", "下载进程已终止")
 
     def closeEvent(self, event):
-        # 确保所有线程已经结束或处理完
+        """确保所有线程和资源在关闭时被释放"""
+        # 停止搜索线程
         if self.search_thread and self.search_thread.isRunning():
             self.search_thread.terminate()
-        if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
-            self.process_check_buttons_thread.stop()  # 设置停止标志
 
-        # 退出应用程序
-        sys.exit()
+        # 停止处理复选框按钮的线程
+        if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
+            self.process_check_buttons_thread.stop()
+
+        # 停止 HTTP 服务器线程
+        if self.http_server_thread and self.http_server_thread.is_alive():
+            logger.info("正在关闭 HTTP 服务器线程...")
+            self.http_server_thread.join(timeout=5)
+
+        # 关闭日志文件处理器
+        for handler in logger.handlers:
+            handler.close()
+            logger.removeHandler(handler)
+
+        # 调用父类的 closeEvent 方法
+        super().closeEvent(event)
 
 def set_global_icon(app):
     """设置全局图标"""

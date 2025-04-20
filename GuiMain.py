@@ -344,10 +344,13 @@ class MovieCrawlerGUI(QMainWindow):
         self.update_buttons()
 
     def closeEvent(self, event):
-        # 确保 HTTP 服务器线程终止
+        """确保 HTTP 服务器线程在关闭时被释放"""
+        # 停止 HTTP 服务器线程
         if self.http_server_thread and self.http_server_thread.is_alive():
             logging.info("正在关闭 HTTP 服务器线程...")
             self.http_server_thread.join(timeout=5)
+
+        # 调用父类的 closeEvent 方法
         super().closeEvent(event)
 
 

@@ -13,6 +13,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import traceback
 import datetime  # 添加导入 datetime 模块
+from configparser import ConfigParser  # 添加导入 ConfigParser
 
 # 配置日志记录器，显式指定编码为 utf-8
 logger = logging.getLogger()
@@ -29,6 +30,29 @@ console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(
 # 将文件处理器和控制台处理器添加到日志记录器
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
+
+def clean_old_logs(log_dir, retention_days):
+    """清理超过保留天数的日志文件"""
+    now = datetime.datetime.now()
+    for filename in os.listdir(log_dir):
+        file_path = os.path.join(log_dir, filename)
+        if os.path.isfile(file_path):
+            file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))
+            if (now - file_time).days > retention_days:
+                os.remove(file_path)
+                logger.info(f"已删除过期日志文件: {file_path}")
+
+# 加载日志保留天数设置
+config = ConfigParser()
+config.read('static/Settings.ini', encoding='utf-8')
+log_days = int(config.get('Settings', 'log_days', fallback='7'))  # 默认保留7天日志
+
+# 修复 log_dir 的路径问题
+log_dir = os.path.dirname(os.path.abspath('app.log'))  # 确保 log_dir 为绝对路径
+os.makedirs(log_dir, exist_ok=True)
+
+# 清理旧日志
+clean_old_logs(log_dir, log_days)
 
 # 添加全局异常捕获
 def handle_exception(exc_type, exc_value, exc_traceback):

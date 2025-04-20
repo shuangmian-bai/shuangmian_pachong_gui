@@ -7,18 +7,9 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHB
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QIcon
 import logging
-from http.server import SimpleHTTPRequestHandler, HTTPServer  # 添加导入
-import threading  # 添加导入
-from socketserver import ThreadingMixIn  # 添加导入
-import socket  # 添加导入
 
 import m3u8_ts
 from set_ini import SettingDialog
-
-
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-    """支持多线程的 HTTP 服务器"""
-    daemon_threads = True  # 确保线程在主线程退出时终止
 
 
 class MovieCrawlerGUI(QMainWindow):
@@ -33,9 +24,6 @@ class MovieCrawlerGUI(QMainWindow):
         self.selected_states = {}  # 用于保存按钮的选择状态
         self.select_all_button = None  # 新增实例变量来存储“选择一页”按钮
         self.results = {}  # 用于保存按钮对应的 m3u8 地址
-        self.http_server_thread = None  # 新增：HTTP 服务器线程
-        self.http_server_port = 8000  # 新增：HTTP 服务器端口
-        self.start_http_server()  # 在初始化时启动 HTTP 服务
         self.init_ui()
 
     def init_ui(self):
@@ -275,49 +263,20 @@ class MovieCrawlerGUI(QMainWindow):
         for button in self.buttons:
             button.setChecked(True)
 
-    def start_http_server(self):
-        """启动 HTTP 服务器以提供静态文件"""
-        def run_server(static_dir, port):
-            handler = partial(SimpleHTTPRequestHandler, directory=static_dir)  # 指定静态文件目录
-            httpd = ThreadedHTTPServer(("127.0.0.1", port), handler)  # 使用多线程 HTTP 服务器
-            logging.info(f"HTTP 服务器已启动: http://127.0.0.1:{port}")
-            try:
-                httpd.serve_forever()
-            except Exception as e:
-                logging.error(f"HTTP 服务器运行时发生错误: {e}")
-            finally:
-                httpd.server_close()
-                logging.info("HTTP 服务器已关闭")
-
-        # 如果线程已存在且仍在运行，先关闭它
-        if self.http_server_thread and self.http_server_thread.is_alive():
-            logging.info("正在关闭现有的 HTTP 服务器线程...")
-            self.http_server_thread.join(timeout=5)
-
-        # 动态分配空闲端口
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind(("127.0.0.1", 0))  # 绑定到端口 0，操作系统会分配一个空闲端口
-            self.http_server_port = s.getsockname()[1]  # 获取分配的端口号
-
-        static_dir = os.path.join(os.getcwd(), "static")  # 使用绝对路径
-        self.http_server_thread = threading.Thread(target=run_server, args=(static_dir, self.http_server_port), daemon=True)
-        self.http_server_thread.start()
-
     def on_play_button_clicked(self, button_text):
         """处理播放按钮点击事件"""
         logging.info(f"播放按钮被点击: {button_text}")
         if hasattr(self, 'results') and button_text in self.results:
-            m3u8_url = self.results[button_text]
-            m3u8_url = m3u8_ts.get_m3u8({
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-            }, m3u8_url)
+            video_url = self.results[button_text]
+            video_url = m3u8_ts.get_m3u8({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'},video_url)
 
-            # 使用 127.0.0.1 构造播放地址
-            play_url = f"http://127.0.0.1:{self.http_server_port}/bfq.html?m3u8={urllib.parse.quote(m3u8_url, safe='')}"
+
+            # 使用新的解析器 URL
+            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
             os.system(f'start "" "{play_url}"')  # 使用系统命令打开播放地址
         else:
-            logging.warning(f"未找到对应的 m3u8 地址: {button_text}")
+            logging.warning(f"未找到对应的视频地址: {button_text}")
 
     def update_page_info(self):
         self.page_info_label.setText(f"第{self.current_page}页 共{self.total_pages}页")
@@ -344,12 +303,7 @@ class MovieCrawlerGUI(QMainWindow):
         self.update_buttons()
 
     def closeEvent(self, event):
-        """确保 HTTP 服务器线程在关闭时被释放"""
-        # 停止 HTTP 服务器线程
-        if self.http_server_thread and self.http_server_thread.is_alive():
-            logging.info("正在关闭 HTTP 服务器线程...")
-            self.http_server_thread.join(timeout=5)
-
+        """确保资源在关闭时被释放"""
         # 调用父类的 closeEvent 方法
         super().closeEvent(event)
 

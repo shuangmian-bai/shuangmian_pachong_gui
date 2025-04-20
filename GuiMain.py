@@ -268,11 +268,25 @@ class MovieCrawlerGUI(QMainWindow):
         logging.info(f"播放按钮被点击: {button_text}")
         if hasattr(self, 'results') and button_text in self.results:
             video_url = self.results[button_text]
-            video_url = m3u8_ts.get_m3u8({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'},video_url)
+            # 如果地址已经是 m3u8，则直接使用
+            if video_url.endswith('.m3u8'):
+                play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
+                logging.info(f"播放地址: {play_url}")
+                os.system(f'start "" "{play_url}"')  # 使用系统命令打开播放地址
+                return
 
+            # 解析 m3u8 地址
+            m3u8_url = m3u8_ts.get_m3u8(
+                {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'},
+                video_url
+            )
+
+            # 更新结果字典，替换为 m3u8 地址
+            self.results[button_text] = m3u8_url
+            logging.info(f"解析后的 m3u8 地址已更新: {m3u8_url}")
 
             # 使用新的解析器 URL
-            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
+            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(m3u8_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
             os.system(f'start "" "{play_url}"')  # 使用系统命令打开播放地址
         else:
@@ -318,4 +332,3 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
-

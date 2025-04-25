@@ -134,6 +134,7 @@ class MovieScraper:
             return {}
 
     def get_m3u8(self, url):
+        """解析 m3u8 地址"""
         from m3u8_ts import get_m3u8
         return get_m3u8(self.headers, url)
 
@@ -144,4 +145,3 @@ class MovieScraper:
     def dow_mp4(self, ts_list, path, n, progress_signal, task_name, stop_flag):
         from downloader import dow_mp4
         dow_mp4(ts_list, path, n, progress_signal, task_name, stop_flag)
-

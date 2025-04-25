@@ -109,11 +109,15 @@ class ProcessCheckButtonsThread(QThread):
                 break  # 如果停止标志被设置，则终止循环
             try:
                 cache = self.results[button]
-                # 调用 get_m3u8
-                m3u8 = self.movie_scraper.get_m3u8(cache)
-                if not m3u8:
-                    logger.info(f"无法获取 m3u8 文件: {button}")
-                    continue
+                # 判断是否是解析好的 m3u8 地址
+                if cache.endswith('.m3u8'):
+                    m3u8 = cache
+                else:
+                    # 调用 get_m3u8 解析 m3u8 地址
+                    m3u8 = self.movie_scraper.get_m3u8(cache)
+                    if not m3u8:
+                        logger.info(f"无法解析 m3u8 文件: {button}")
+                        continue
 
                 # 获取 ts 列表
                 ts_list = self.movie_scraper.get_ts_list(m3u8)
@@ -136,7 +140,6 @@ class ProcessCheckButtonsThread(QThread):
                 self.movie_scraper.dow_mp4(ts_list, dow_path, n, self.progress_popup, f"下载 {button}", self.stop_flag)
                 logger.info(f"处理多选按钮: {button} 下载完成")
             except Exception as e:
-                import traceback
                 logger.error(f"处理多选按钮: {button} 时发生错误: {e}")
                 traceback.print_exc()  # 打印详细的错误堆栈信息
             finally:
@@ -361,4 +364,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
-

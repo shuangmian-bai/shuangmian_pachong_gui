@@ -5,7 +5,7 @@ set IS_RELEASE=1
 
 REM 设置输出文件夹和文件名变量
 set OUTPUT_DIR=dist
-set RELEASE_NAME=shuangmian_release
+set RELEASE_NAME=pachong_gui
 set DEBUG_NAME=shuangmian_debug
 
 REM 检查 PyInstaller 是否已安装

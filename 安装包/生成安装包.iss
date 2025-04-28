@@ -5,7 +5,7 @@
 #define MyAppVersion "1.5"
 #define MyAppPublisher "shuangmian-bai"
 #define MyAppURL "https://github.com/shuangmian-bai/shuangmian_pachong_gui"
-#define MyAppExeName "shuangmian_pachong_gui.exe"
+#define MyAppExeName "pachong_gui.exe"
 
 [Setup]
 AppId={{44D55B28-BD93-4995-BEE5-34047FD6CD6C}}
@@ -22,7 +22,7 @@ DisableProgramGroupPage=yes
 PrivilegesRequiredOverridesAllowed=dialog
 OutputDir=C:\Users\Administrator\Desktop\双面的影视爬虫带gui\安装包
 OutputBaseFilename=双面的影视爬虫gui安装包
-SetupIconFile=..\dist\shuangmian_pachong_gui\static\icon\shuangmian.ico
+SetupIconFile=..\static\icon\shuangmian.ico
 Compression=lzma
 SolidCompression=yes
 WizardStyle=modern
@@ -35,10 +35,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 
 [Files]
 ; 主可执行文件
-Source: "..\dist\shuangmian_pachong_gui\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\dist\pachong_gui\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 
 ; 直接导入整个 dist\shuangmian_pachong_gui 文件夹及其所有内容
-Source: "..\dist\shuangmian_pachong_gui\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\dist\pachong_gui\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 ; 程序菜单图标

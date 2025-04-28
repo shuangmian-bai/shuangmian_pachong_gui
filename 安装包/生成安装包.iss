@@ -37,6 +37,10 @@ Name: "chinese"; MessagesFile: "compiler:Languages\Chinese.isl" ; 使用中文�
 ; 定义安装任务（如创建桌面图标）
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}" ; 创建桌面图标任务
 
+[InstallDelete]
+; 删除上一次安装的所有文件和子目录
+Type: filesandordirs; Name: "{app}\*"
+
 [Files]
 ; 定义需要安装的文件
 Source: "..\dist\pachong_gui\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion ; 主可执行文件

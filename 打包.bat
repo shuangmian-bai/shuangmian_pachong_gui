@@ -24,20 +24,26 @@ if exist "%OUTPUT_DIR%" (
 REM 设置 pyinstaller 命令的通用部分
 set PYINSTALLER_CMD=pyinstaller --icon=./static/icon/shuangmian.ico --add-data "static;static" Main.py
 
-REM 打包多文件版本
+REM 设置单文件版本名称
 if %IS_RELEASE%==1 (
-    echo 正在打包发布版本（多文件）...
-    %PYINSTALLER_CMD% --noconsole --name=%RELEASE_NAME%
+    set MULTI_EXE_NAME=%RELEASE_NAME%
+    set SINGLE_EXE_NAME=%RELEASE_NAME%_单文件版本
 ) else (
-    echo 正在打包调试版本（多文件）...
-    %PYINSTALLER_CMD% --name=%DEBUG_NAME%
+    set MULTI_EXE_NAME=%DEBUG_NAME%
+    set SINGLE_EXE_NAME=%DEBUG_NAME%_单文件版本
+)
+
+REM 打包多文件版本
+echo 正在打包多文件版本...
+%PYINSTALLER_CMD% --noconsole --name=%MULTI_EXE_NAME%
+
+REM 删除旧的单文件可执行文件
+if exist "%SINGLE_EXE_NAME%.exe" (
+    echo 正在删除旧的单文件可执行文件...
+    del /q "%SINGLE_EXE_NAME%.exe"
 )
 
 REM 打包单文件版本
-set SINGLE_EXE_NAME=%RELEASE_NAME%
-if %IS_RELEASE%==0 (
-    set SINGLE_EXE_NAME=%DEBUG_NAME%
-)
 echo 正在打包单文件版本...
 %PYINSTALLER_CMD% --onefile --noconsole --name=%SINGLE_EXE_NAME% --distpath .
 

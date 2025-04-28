@@ -13,6 +13,12 @@ import m3u8_ts
 from set_ini import SettingDialog
 
 
+def resource_path(relative_path):
+    """获取资源文件的绝对路径"""
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
+
 class PlayThread(QThread):
     """多线程处理播放逻辑"""
     play_finished = pyqtSignal(str)  # 信号，用于通知播放完成
@@ -76,9 +82,9 @@ class MovieCrawlerGUI(QMainWindow):
         self.setWindowTitle("双面的影视爬虫")
         self.setGeometry(100, 100, 800, 600)
 
-        # 移除单独设置窗口图标的代码
-        # icon_path = "static/icon/shuangmian.ico"
-        # self.setWindowIcon(QIcon(icon_path))
+        # 设置窗口图标
+        icon_path = resource_path("static/icon/shuangmian.ico")
+        self.setWindowIcon(QIcon(icon_path))
 
         # 主容器
         main_widget = QWidget()
@@ -382,4 +388,3 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
-

@@ -1,9 +1,15 @@
 import os
+import sys
 from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QPushButton, QLineEdit, QFileDialog, QLabel, QHBoxLayout
 from PyQt6.QtGui import QIcon, QFont, QIntValidator
 from configparser import ConfigParser, NoSectionError
 from utils import process_path
 import logging
+
+def resource_path(relative_path):
+    """获取资源文件的绝对路径"""
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
 
 class SettingDialog(QDialog):
     def __init__(self):
@@ -104,7 +110,7 @@ class SettingDialog(QDialog):
 
     def load_settings(self):
         """加载设置"""
-        static_folder = 'static'
+        static_folder = resource_path('static')
         ini_file_path = os.path.join(static_folder, 'Settings.ini')
 
         if not os.path.exists(ini_file_path):
@@ -138,7 +144,7 @@ class SettingDialog(QDialog):
         dow_path = process_path(dow_path)
 
         # 更新 ini 文件
-        static_folder = 'static'
+        static_folder = resource_path('static')
         ini_file_path = os.path.join(static_folder, 'Settings.ini')
         self.config.set('Settings', 'dow_path', dow_path)
         self.config.set('Settings', 'n', n)
@@ -160,4 +166,3 @@ if __name__ == "__main__":
     app = QApplication([])
     dialog = SettingDialog()
     dialog.exec()
-

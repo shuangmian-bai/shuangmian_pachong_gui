@@ -31,6 +31,11 @@ console_handler.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
+def resource_path(relative_path):
+    """获取资源文件的绝对路径"""
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)
+
 def clean_old_logs(log_dir, retention_days):
     """清理超过保留天数的日志文件"""
     now = datetime.datetime.now()
@@ -44,11 +49,11 @@ def clean_old_logs(log_dir, retention_days):
 
 # 加载日志保留天数设置
 config = ConfigParser()
-config.read('static/Settings.ini', encoding='utf-8')
+config.read(resource_path('static/Settings.ini'), encoding='utf-8')
 log_days = int(config.get('Settings', 'log_days', fallback='7'))  # 默认保留7天日志
 
 # 修复 log_dir 的路径问题
-log_dir = os.path.dirname(os.path.abspath('app.log'))  # 确保 log_dir 为绝对路径
+log_dir = os.path.dirname(resource_path('app.log'))  # 确保 log_dir 为绝对路径
 os.makedirs(log_dir, exist_ok=True)
 
 # 清理旧日志
@@ -339,7 +344,7 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
 
 def set_global_icon(app):
     """设置全局图标"""
-    icon_path = "static/icon/shuangmian.ico"
+    icon_path = resource_path("static/icon/shuangmian.ico")
     app.setWindowIcon(QIcon(icon_path))
 
 if __name__ == "__main__":
@@ -364,3 +369,4 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
+

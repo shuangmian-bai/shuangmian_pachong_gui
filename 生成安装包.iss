@@ -40,7 +40,7 @@ OutputDir=C:\Users\Administrator\Desktop\双面的影视爬虫带gui\安装包
 ; 输出安装包的目录
 OutputBaseFilename=双面的影视爬虫gui安装包
 ; 输出安装包的文件名
-SetupIconFile=..\static\icon\shuangmian.ico
+SetupIconFile=.\static\icon\shuangmian.ico
 ; 安装程序的图标
 Compression=lzma
 ; 使用 LZMA 压缩算法
@@ -65,9 +65,9 @@ Type: filesandordirs; Name: "{app}\*"
 
 [Files]
 ; 定义需要安装的文件
-Source: "..\dist\pachong_gui\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: ".\dist\pachong_gui\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 ; 主可执行文件
-Source: "..\dist\pachong_gui\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: ".\dist\pachong_gui\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 ; 导入整个 dist 文件夹及其子目录
 
 [Icons]

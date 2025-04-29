@@ -2,6 +2,9 @@ from PyQt6.QtWidgets import QMessageBox, QApplication, QWidget, QPushButton, QVB
 from PyQt6.QtCore import QTimer
 from PyQt6.QtGui import QIcon  # 导入 QIcon 模块
 
+from utils import resource_path
+
+
 class SearchPopup:
     def __init__(self, parent: QWidget):
         self.parent = parent
@@ -15,7 +18,7 @@ class SearchPopup:
             self.popup.setText("正在搜索，请稍候...")
 
             # 设置窗口图标
-            icon_path = "static/icon/shuangmian.ico"  # 图标路径
+            icon_path = resource_path("static/icon/shuangmian.ico")  # 图标路径
             self.popup.setWindowIcon(QIcon(icon_path))  # 设置图标
 
             self.popup.show()

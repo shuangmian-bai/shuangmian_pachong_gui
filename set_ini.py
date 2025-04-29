@@ -27,9 +27,9 @@ class SettingDialog(QDialog):
         self.dow_path_input.setStyleSheet("""font-size: 14px; padding: 8px; border: 1px solid #ccc; border-radius: 5px;""")
 
         # 加载文件夹图标
-        folder_icon = QIcon("icon/folder.png")
+        folder_icon = QIcon(resource_path("static/icon/folder.png"))
         if folder_icon.isNull():
-            logging.warning("警告：文件夹图标未正确加载！请检查路径：icon/folder.png")
+            logging.warning("警告：文件夹图标未正确加载！请检查路径：static/icon/folder.png")
 
         self.dow_path_button = QPushButton("选择路径")
         self.dow_path_button.setIcon(folder_icon)

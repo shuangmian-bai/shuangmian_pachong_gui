@@ -85,5 +85,5 @@ if not os.path.exists(static_path):
 
 def resource_path(relative_path):
     """获取资源文件的绝对路径"""
-    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    base_path = static_path[:-6]
     return os.path.join(base_path, relative_path)

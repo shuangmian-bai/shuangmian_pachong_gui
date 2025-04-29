@@ -36,7 +36,7 @@ DisableProgramGroupPage=yes
 ; 禁用程序组页面
 PrivilegesRequiredOverridesAllowed=dialog
 ; 允许用户在权限不足时显示对话框
-OutputDir=C:\Users\Administrator\Desktop\双面的影视爬虫带gui\安装包
+OutputDir=.\安装包
 ; 输出安装包的目录
 OutputBaseFilename=双面的影视爬虫gui安装包
 ; 输出安装包的文件名

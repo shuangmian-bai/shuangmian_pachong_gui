@@ -24,36 +24,53 @@ if exist "%OUTPUT_DIR%" (
 REM 设置 pyinstaller 命令的通用部分
 set PYINSTALLER_CMD=pyinstaller --icon=./static/icon/shuangmian.ico --add-data "static;static" Main.py
 
-REM 设置单文件版本名称
+REM 设置版本名称
 if %IS_RELEASE%==1 (
     set MULTI_EXE_NAME=%RELEASE_NAME%
     set SINGLE_EXE_NAME=%RELEASE_NAME%_单文件版本
+    set CONSOLE_FLAG=
 ) else (
     set MULTI_EXE_NAME=%DEBUG_NAME%
     set SINGLE_EXE_NAME=%DEBUG_NAME%_单文件版本
+    set CONSOLE_FLAG=--console
 )
 
-REM 打包多文件版本
-echo 正在打包多文件版本...
-%PYINSTALLER_CMD% --noconsole --name=%MULTI_EXE_NAME%
-
-REM 删除旧的单文件可执行文件
-if exist "%SINGLE_EXE_NAME%.exe" (
-    echo 正在删除旧的单文件可执行文件...
-    del /q "%SINGLE_EXE_NAME%.exe"
-)
-
-REM 打包单文件版本
-echo 正在打包单文件版本...
-%PYINSTALLER_CMD% --onefile --noconsole --name=%SINGLE_EXE_NAME% --distpath .
-
-REM 清理临时文件
-echo 正在清理临时文件...
+REM 定义统一的清理函数
+:cleanup
 if exist "build" (
+    echo 正在清理 build 文件夹...
     rmdir /s /q build
 )
 if exist "*.spec" (
+    echo 正在清理 spec 文件...
     del /q *.spec
+)
+goto :eof
+
+REM 统一处理多文件和单文件版本
+for %%M in ("多文件", "单文件") do (
+    if "%%M"=="多文件" (
+        set CURRENT_NAME=%MULTI_EXE_NAME%
+        set ONEFILE_FLAG=
+        set DISTPATH_FLAG=--distpath %OUTPUT_DIR%
+    ) else (
+        set CURRENT_NAME=%SINGLE_EXE_NAME%
+        set ONEFILE_FLAG=--onefile
+        set DISTPATH_FLAG=--distpath .
+    )
+
+    REM 删除旧的可执行文件
+    if exist "%CURRENT_NAME%.exe" (
+        echo 正在删除旧的 %%M 可执行文件...
+        del /q "%CURRENT_NAME%.exe"
+    )
+
+    REM 打包版本
+    echo 正在打包 %%M 版本...
+    %PYINSTALLER_CMD% %ONEFILE_FLAG% %CONSOLE_FLAG% --name=%CURRENT_NAME% %DISTPATH_FLAG%
+
+    REM 清理临时文件
+    call :cleanup
 )
 
 echo 打包完成！

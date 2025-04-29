@@ -11,8 +11,10 @@ set DEBUG_NAME=shuangmian_debug
 REM 检查 PyInstaller 是否已安装
 python -m pyinstaller --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo PyInstaller 未安装，正在安装...
-    python -m pip install --upgrade pyinstaller
+    echo PyInstaller 未安装，请先安装 PyInstaller。
+    echo 使用命令：pip install pyinstaller
+    echo 回车后继续
+    pause
 )
 
 REM 删除输出文件夹（如果存在）
@@ -22,9 +24,9 @@ if exist "%OUTPUT_DIR%" (
 )
 
 REM 设置 pyinstaller 命令的通用部分
-set PYINSTALLER_CMD=pyinstaller --icon=./static/icon/shuangmian.ico --add-data "static;static" Main.py
+set PYINSTALLER_CMD=pyinstaller --icon=./static/icon/shuangmian.ico --add-data "static;static" --hidden-import=importlib_resources.trees Main.py
 
-REM 设置单文件版本名称
+REM 根据发布版本设置文件名
 if %IS_RELEASE%==1 (
     set MULTI_EXE_NAME=%RELEASE_NAME%
     set SINGLE_EXE_NAME=%RELEASE_NAME%_单文件版本
@@ -33,19 +35,29 @@ if %IS_RELEASE%==1 (
     set SINGLE_EXE_NAME=%DEBUG_NAME%_单文件版本
 )
 
-REM 打包多文件版本
-echo 正在打包多文件版本...
-%PYINSTALLER_CMD% --noconsole --name=%MULTI_EXE_NAME%
-
 REM 删除旧的单文件可执行文件
 if exist "%SINGLE_EXE_NAME%.exe" (
     echo 正在删除旧的单文件可执行文件...
     del /q "%SINGLE_EXE_NAME%.exe"
 )
 
+REM 打包多文件版本
+echo 正在打包多文件版本...
+%PYINSTALLER_CMD% --noconsole --name=%MULTI_EXE_NAME%
+if %errorlevel% neq 0 (
+    echo 打包多文件版本失败。
+    pause
+    exit /b 1
+)
+
 REM 打包单文件版本
 echo 正在打包单文件版本...
 %PYINSTALLER_CMD% --onefile --noconsole --name=%SINGLE_EXE_NAME% --distpath .
+if %errorlevel% neq 0 (
+    echo 打包单文件版本失败。
+    pause
+    exit /b 1
+)
 
 REM 清理临时文件
 echo 正在清理临时文件...

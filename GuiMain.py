@@ -12,12 +12,7 @@ import logging
 import m3u8_ts
 from set_ini import SettingDialog
 
-
-def resource_path(relative_path):
-    """获取资源文件的绝对路径"""
-    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-    return os.path.join(base_path, relative_path)
-
+from utils import resource_path
 
 class PlayThread(QThread):
     """多线程处理播放逻辑"""

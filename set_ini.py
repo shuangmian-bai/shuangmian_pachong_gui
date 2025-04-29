@@ -5,11 +5,8 @@ from PyQt6.QtGui import QIcon, QFont, QIntValidator
 from configparser import ConfigParser, NoSectionError
 from utils import process_path
 import logging
+from utils import resource_path
 
-def resource_path(relative_path):
-    """获取资源文件的绝对路径"""
-    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
-    return os.path.join(base_path, relative_path)
 
 class SettingDialog(QDialog):
     def __init__(self):

@@ -1,4 +1,6 @@
 import os
+import shutil
+import sys
 import time
 import requests
 from requests.exceptions import RequestException, ConnectionError
@@ -52,3 +54,36 @@ def process_path(dow_path):
         dow_path += '/'
 
     return dow_path
+
+def get_static_path():
+    """获取静态文件路径"""
+    if getattr(sys, 'frozen', False):
+        # 如果是打包后的可执行文件，使用用户目录下的配置文件
+        config_dir = os.path.expanduser('~/.双面的影视爬虫带gui')
+        os.makedirs(config_dir, exist_ok=True)
+        config_path = os.path.join(config_dir, 'static')
+    else:
+        # 如果是源代码，使用当前目录
+        config_path = './static'
+    return config_path
+
+def get_default_static_path():
+    """获取默认静态文件路径"""
+    if getattr(sys, 'frozen', False):
+        # 如果是打包后的可执行文件，使用临时目录中的默认配置文件
+        return os.path.join(sys._MEIPASS, 'static')
+    else:
+        # 如果是源代码，使用当前目录中的默认配置文件
+        return './static'
+
+static_path = get_static_path()
+default_static_path = get_default_static_path()
+
+if not os.path.exists(static_path):
+    # 如果配置文件不存在，则从默认配置文件复制
+    shutil.copytree (default_static_path, static_path)
+
+def resource_path(relative_path):
+    """获取资源文件的绝对路径"""
+    base_path = getattr(sys, '_MEIPASS', os.path.abspath("."))
+    return os.path.join(base_path, relative_path)

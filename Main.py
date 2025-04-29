@@ -1,4 +1,5 @@
 import os
+import shutil
 import sys
 import pandas as pd
 from PyQt6.QtWidgets import QApplication, QMainWindow, QMessageBox
@@ -14,6 +15,35 @@ from logging.handlers import RotatingFileHandler
 import traceback
 import datetime  # 添加导入 datetime 模块
 from configparser import ConfigParser  # 添加导入 ConfigParser
+import configparser
+
+def get_static_path():
+    """获取静态文件路径"""
+    if getattr(sys, 'frozen', False):
+        # 如果是打包后的可执行文件，使用用户目录下的配置文件
+        config_dir = os.path.expanduser('~/.双面的影视爬虫带gui')
+        os.makedirs(config_dir, exist_ok=True)
+        config_path = os.path.join(config_dir, 'static')
+    else:
+        # 如果是源代码，使用当前目录
+        config_path = './static'
+    return config_path
+
+def get_default_static_path():
+    """获取默认静态文件路径"""
+    if getattr(sys, 'frozen', False):
+        # 如果是打包后的可执行文件，使用临时目录中的默认配置文件
+        return os.path.join(sys._MEIPASS, 'static')
+    else:
+        # 如果是源代码，使用当前目录中的默认配置文件
+        return './static'
+
+static_path = get_static_path()
+default_static_path = get_default_static_path()
+
+if not os.path.exists(static_path):
+    # 如果配置文件不存在，则从默认配置文件复制
+    shutil.copytree (default_static_path, static_path)
 
 # 配置日志记录器，显式指定编码为 utf-8
 logger = logging.getLogger()

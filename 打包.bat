@@ -21,6 +21,12 @@ if %errorlevel% neq 0 (
 )
 echo PyInstaller 已安装。
 
+REM 删除旧的单文件可执行文件
+if exist "%SINGLE_EXE_NAME%.exe" (
+    echo 正在删除旧的单文件可执行文件...
+    del /q "%SINGLE_EXE_NAME%.exe"
+)
+
 REM 删除输出文件夹（如果存在）
 if exist "%OUTPUT_DIR%" (
     echo 正在删除旧的输出文件夹...
@@ -34,20 +40,16 @@ REM 根据发布版本设置文件名
 if %IS_RELEASE%==1 (
     set MULTI_EXE_NAME=%RELEASE_NAME%
     set SINGLE_EXE_NAME=%RELEASE_NAME%_单文件版本
+
+    set PYINSTALLER_CMD=%PYINSTALLER_CMD% --noconsole
 ) else (
     set MULTI_EXE_NAME=%DEBUG_NAME%
     set SINGLE_EXE_NAME=%DEBUG_NAME%_单文件版本
 )
 
-REM 删除旧的单文件可执行文件
-if exist "%SINGLE_EXE_NAME%.exe" (
-    echo 正在删除旧的单文件可执行文件...
-    del /q "%SINGLE_EXE_NAME%.exe"
-)
-
 REM 打包多文件版本
 echo 正在打包多文件版本...
-%PYINSTALLER_CMD% --noconsole --name=%MULTI_EXE_NAME%
+%PYINSTALLER_CMD% --name=%MULTI_EXE_NAME%
 if %errorlevel% neq 0 (
     echo 打包多文件版本失败。
     pause
@@ -56,7 +58,7 @@ if %errorlevel% neq 0 (
 
 REM 打包单文件版本
 echo 正在打包单文件版本...
-%PYINSTALLER_CMD% --onefile --noconsole --name=%SINGLE_EXE_NAME% --distpath .
+%PYINSTALLER_CMD% --onefile --name=%SINGLE_EXE_NAME% --distpath .
 if %errorlevel% neq 0 (
     echo 打包单文件版本失败。
     pause

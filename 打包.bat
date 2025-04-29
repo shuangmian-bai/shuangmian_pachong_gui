@@ -1,5 +1,6 @@
 @echo off
 chcp 65001 >nul
+
 REM 设置变量是否为发布版本（1 为发布版本，0 为测试版本）
 set IS_RELEASE=1
 
@@ -9,13 +10,16 @@ set RELEASE_NAME=pachong_gui
 set DEBUG_NAME=shuangmian_debug
 
 REM 检查 PyInstaller 是否已安装
-python -m pyinstaller --version >nul 2>&1
+pyinstaller --version >nul 2>&1
 if %errorlevel% neq 0 (
-    echo PyInstaller 未安装，请先安装 PyInstaller。
-    echo 使用命令：pip install pyinstaller
-    echo 回车后继续
-    pause
+   echo PyInstaller 未安装，请先安装 PyInstaller。
+   echo 安装命令：pip install pyinstaller
+   echo.
+   echo 按下任意键后退出...
+   pause >nul
+   exit /b 1
 )
+echo PyInstaller 已安装。
 
 REM 删除输出文件夹（如果存在）
 if exist "%OUTPUT_DIR%" (

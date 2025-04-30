@@ -83,7 +83,14 @@ if not os.path.exists(static_path):
     # 如果配置文件不存在，则从默认配置文件复制
     shutil.copytree (default_static_path, static_path)
 
+
 def resource_path(relative_path):
     """获取资源文件的绝对路径"""
     base_path = static_path[:-6]
-    return os.path.join(base_path, relative_path)
+    absolute_path = os.path.join(base_path, relative_path)
+
+    # 确保返回的路径为绝对路径
+    if not os.path.isabs(absolute_path):
+        absolute_path = os.path.abspath(absolute_path)
+
+    return absolute_path

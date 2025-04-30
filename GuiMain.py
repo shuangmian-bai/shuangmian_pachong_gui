@@ -397,16 +397,3 @@ class MovieCrawlerGUI(QMainWindow):
             if thread.isRunning():
                 thread.stop()
         super().closeEvent(event)
-
-
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    button_data = [
-        ["按钮1", "按钮2", "按钮3"],
-        ["按钮4", "按钮5", "按钮6"],
-        ["按钮7", "按钮8", "按钮9"]
-    ]
-    window = MovieCrawlerGUI(button_data, is_radio=False)
-    window.show()
-    sys.exit(app.exec())
-

@@ -157,9 +157,3 @@ class SettingDialog(QDialog):
             logging.error(f"文件写入失败: {e}")
 
         self.accept()  # 关闭弹窗
-
-
-if __name__ == "__main__":
-    app = QApplication([])
-    dialog = SettingDialog()
-    dialog.exec()

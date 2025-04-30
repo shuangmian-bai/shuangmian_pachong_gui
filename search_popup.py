@@ -33,32 +33,3 @@ class SearchPopup:
             print("弹窗已关闭")
         else:
             print("弹窗不存在或未显示，无法关闭")
-
-def main():
-    app = QApplication([])
-    window = QWidget()
-    window.setWindowTitle("主窗口")
-    window.setGeometry(100, 100, 300, 200)
-
-    layout = QVBoxLayout()
-    window.setLayout(layout)
-
-    search_popup = SearchPopup(window)  # 不再传递延迟时间
-
-    show_button = QPushButton("显示弹窗")
-    show_button.clicked.connect(search_popup.show_popup)
-    layout.addWidget(show_button)
-
-    close_button = QPushButton("关闭弹窗")
-    close_button.clicked.connect(search_popup.close_popup)
-    layout.addWidget(close_button)
-
-    window.show()
-
-    # 测试延迟关闭逻辑（仅在测试时使用）
-    QTimer.singleShot(5000, search_popup.close_popup)  # 延迟 5 秒后自动关闭弹窗
-
-    app.exec()
-
-if __name__ == "__main__":
-    main()

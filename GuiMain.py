@@ -3,6 +3,7 @@ import os
 import urllib.parse  # 添加导入
 from functools import partial  # 添加导入
 import time  # 添加导入
+import webbrowser  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox, QDialog
 from PyQt6.QtCore import Qt, QThread, pyqtSignal, QUrl  # 添加导入 QUrl
@@ -352,14 +353,11 @@ class MovieCrawlerGUI(QMainWindow):
                 self.results[button_text] = video_url  # 更新结果
 
             # 构造播放 URL
-            root_url = resource_path('static/bfq.html')
-            root_url = root_url
-            play_url = f"file:///{root_url}?m3u8={video_url}".replace('\\', '/')  # 将反斜杠替换为正斜杠
-
+            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
-            # 打开嵌入式播放器窗口
-            player = VideoPlayer(play_url)
-            player.exec()
+
+            # 使用系统默认浏览器打开播放地址
+            webbrowser.open(play_url)
         else:
             logging.warning(f"未找到对应的视频地址: {button_text}")
 
@@ -399,3 +397,4 @@ class MovieCrawlerGUI(QMainWindow):
             if thread.isRunning():
                 thread.stop()
         super().closeEvent(event)
+

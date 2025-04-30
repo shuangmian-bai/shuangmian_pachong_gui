@@ -4,9 +4,10 @@ import urllib.parse  # 添加导入
 from functools import partial  # 添加导入
 import time  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
-    QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
+    QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox, QDialog
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QUrl  # 添加导入 QUrl
 from PyQt6.QtGui import QIcon
+from PyQt6.QtWebEngineWidgets import QWebEngineView  # 添加导入
 import logging
 
 import m3u8_ts
@@ -54,6 +55,24 @@ class PlayThread(QThread):
     def stop(self):
         """停止线程"""
         self.terminate()
+
+
+class VideoPlayer(QDialog):
+    """嵌入式视频播放器窗口"""
+    def __init__(self, url, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("视频播放器")
+        self.setGeometry(100, 100, 800, 600)
+
+        # 创建布局
+        layout = QVBoxLayout(self)
+
+        # 创建 QWebEngineView 并加载 URL
+        self.browser = QWebEngineView(self)
+        self.browser.setUrl(QUrl(url))  # 修改为 QUrl 类型
+        layout.addWidget(self.browser)
+
+        self.setLayout(layout)
 
 
 class MovieCrawlerGUI(QMainWindow):
@@ -322,16 +341,23 @@ class MovieCrawlerGUI(QMainWindow):
         self.last_play_click_time[button_text] = current_time  # 更新最后点击时间
         logging.info(f"播放按钮被点击: {button_text}")
 
-        if button_text in self.play_threads and self.play_threads[button_text].isRunning():
-            logging.info(f"播放线程正在运行: {button_text}")
-            return
-
         if hasattr(self, 'results') and button_text in self.results:
             video_url = self.results[button_text]
-            play_thread = PlayThread(button_text, video_url, self.results)
-            play_thread.play_finished.connect(self.on_play_finished)
-            self.play_threads[button_text] = play_thread
-            play_thread.start()
+            if not video_url.endswith('.m3u8'):
+                # 如果不是 m3u8 地址，解析为 m3u8
+                video_url = m3u8_ts.get_m3u8(
+                    {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'},
+                    video_url
+                )
+                self.results[button_text] = video_url  # 更新结果
+
+            # 构造播放 URL
+            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
+
+            logging.info(f"播放地址: {play_url}")
+            # 打开嵌入式播放器窗口
+            player = VideoPlayer(play_url)
+            player.exec()
         else:
             logging.warning(f"未找到对应的视频地址: {button_text}")
 
@@ -383,3 +409,4 @@ if __name__ == "__main__":
     window = MovieCrawlerGUI(button_data, is_radio=False)
     window.show()
     sys.exit(app.exec())
+

@@ -353,7 +353,9 @@ class MovieCrawlerGUI(QMainWindow):
                 self.results[button_text] = video_url  # 更新结果
 
             # 构造播放 URL
-            play_url = f"https://vip.zykbf.com/?url={urllib.parse.quote(video_url, safe='')}"
+            jxq = resource_path("static/bfq.html")
+            jxq = 'file:///' + jxq.replace('\\', '/')
+            play_url = f"{jxq}?m3u8={urllib.parse.quote(video_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
 
             # 使用系统默认浏览器打开播放地址

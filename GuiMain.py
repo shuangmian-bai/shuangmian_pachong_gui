@@ -353,8 +353,7 @@ class MovieCrawlerGUI(QMainWindow):
                 self.results[button_text] = video_url  # 更新结果
 
             # 构造播放 URL
-            jxq = resource_path("static/bfq.html")
-            jxq = 'file:///' + jxq.replace('\\', '/')
+            jxq = resource_path("static/bfq.html",types='path')
             play_url = f"{jxq}?m3u8={urllib.parse.quote(video_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
 

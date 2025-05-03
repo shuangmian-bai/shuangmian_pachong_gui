@@ -103,8 +103,7 @@ def resource_path(relative_path,types='file'):
     base_path = static_path[:-6]
     if types == 'file':
         """获取资源文件的绝对路径"""
-        # absolute_path = os.path.join(base_path, relative_path)
-        absolute_path = base_path
+        absolute_path = os.path.join(base_path, relative_path)
 
         # 确保返回的路径为绝对路径
         if not os.path.isabs(absolute_path):

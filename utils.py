@@ -99,14 +99,19 @@ def set_http_root():
 
     return http_root
 
-def resource_path(relative_path):
-    """获取资源文件的绝对路径"""
+def resource_path(relative_path,types='file'):
     base_path = static_path[:-6]
-    # absolute_path = os.path.join(base_path, relative_path)
-    absolute_path = base_path
+    if types == 'file':
+        """获取资源文件的绝对路径"""
+        # absolute_path = os.path.join(base_path, relative_path)
+        absolute_path = base_path
 
-    # 确保返回的路径为绝对路径
-    if not os.path.isabs(absolute_path):
-        absolute_path = os.path.abspath(absolute_path)
+        # 确保返回的路径为绝对路径
+        if not os.path.isabs(absolute_path):
+            absolute_path = os.path.abspath(absolute_path)
 
-    return absolute_path
+        return absolute_path
+    elif types == 'path':
+        """获取资源文件对于http服务器的url"""
+        urls = f'127.0.0.1:{port}/{relative_path}'
+        return urls

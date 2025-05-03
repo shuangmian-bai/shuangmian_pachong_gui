@@ -16,7 +16,10 @@ import traceback
 import datetime  # 添加导入 datetime 模块
 from configparser import ConfigParser  # 添加导入 ConfigParser
 import configparser
-from utils import resource_path
+from utils import resource_path, set_port, set_http_root  # 更新导入 set_http_root
+import socket  # 添加导入 socket
+from http.server import HTTPServer, SimpleHTTPRequestHandler  # 添加导入 HTTPServer 和 SimpleHTTPRequestHandler
+from threading import Thread  # 添加导入 Thread
 
 
 # 配置日志记录器，显式指定编码为 utf-8
@@ -342,6 +345,28 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 调用父类的 closeEvent 方法
         super().closeEvent(event)
 
+# 全局变量，用于存储 HTTP 服务器端口号
+http_server_port = None
+
+def start_http_server():
+    """启动 HTTP 服务器并随机选择未占用的端口"""
+    global http_server_port
+    http_root = set_http_root()  # 设置 HTTP 服务器根工作目录
+    os.chdir(http_root)  # 切换到根工作目录
+    for port in range(8000, 9000):  # 尝试端口范围
+        try:
+            server = HTTPServer(('127.0.0.1', port), SimpleHTTPRequestHandler)
+            http_server_port = port
+            set_port(port)  # 设置全局端口号到 utils.py 的 port 常量
+            thread = Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            logger.info(f"HTTP 服务器已启动，端口号: {port}, 根目录: {http_root}")
+            break
+        except OSError:
+            continue
+    else:
+        logger.error("无法启动 HTTP 服务器，所有端口均被占用")
+
 def set_global_icon(app):
     """设置全局图标"""
     icon_path = resource_path("static/icon/shuangmian.ico")
@@ -355,6 +380,9 @@ if __name__ == "__main__":
 
         app = QApplication(sys.argv)
         set_global_icon(app)  # 调用全局图标设置
+
+        # 启动 HTTP 服务器
+        start_http_server()
 
         # 定义按钮数据
         button_data = [

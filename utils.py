@@ -112,5 +112,5 @@ def resource_path(relative_path,types='file'):
         return absolute_path
     elif types == 'path':
         """获取资源文件对于http服务器的url"""
-        urls = f'127.0.0.1:{port}/{relative_path}'
+        urls = f'http://127.0.0.1:{port}/{relative_path}'
         return urls

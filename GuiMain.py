@@ -6,7 +6,7 @@ import time  # 添加导入
 import webbrowser  # 添加导入
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit, \
     QPushButton, QTextEdit, QFrame, QButtonGroup, QRadioButton, QCheckBox, QDialog
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QUrl  # 添加导入 QUrl
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QUrl, QTimer  # 添加导入 QUrl 和 QTimer
 from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtWebEngineWidgets import QWebEngineView  # 添加导入
 import logging
@@ -353,12 +353,12 @@ class MovieCrawlerGUI(QMainWindow):
                 self.results[button_text] = video_url  # 更新结果
 
             # 构造播放 URL
-            jxq = resource_path("static/bfq.html",types='path')
+            jxq = resource_path("static/bfq.html", types='path')
             play_url = f"{jxq}?m3u8={urllib.parse.quote(video_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
 
-            # 使用系统默认浏览器打开播放地址
-            QDesktopServices.openUrl(QUrl(play_url))  # 使用 QUrl 打开 URL
+            # 使用 QTimer 延迟打开 URL
+            QTimer.singleShot(3, lambda: QDesktopServices.openUrl(QUrl(play_url)))  # 使用 QUrl 打开 URL
         else:
             logging.warning(f"未找到对应的视频地址: {button_text}")
 
@@ -398,4 +398,5 @@ class MovieCrawlerGUI(QMainWindow):
             if thread.isRunning():
                 thread.stop()
         super().closeEvent(event)
+
 

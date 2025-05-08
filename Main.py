@@ -352,12 +352,20 @@ def start_http_server():
     """启动 HTTP 服务器并随机选择未占用的端口"""
     global http_server_port
     http_root = set_http_root()  # 设置 HTTP 服务器根工作目录
-    os.chdir(http_root)  # 切换到根工作目录
+    os.chdir(http_root)
+
     for port in range(8000, 9000):  # 尝试端口范围
         try:
+            # 创建服务器实例
             server = HTTPServer(('127.0.0.1', port), SimpleHTTPRequestHandler)
+
+            # 手动设置 server_name 和 server_port，避免后续访问时触发 getfqdn()
+            server.server_name = 'localhost'
+            server.server_port = port
+
             http_server_port = port
             set_port(port)  # 设置全局端口号到 utils.py 的 port 常量
+
             thread = Thread(target=server.serve_forever, daemon=True)
             thread.start()
             logger.info(f"HTTP 服务器已启动，端口号: {port}, 根目录: {http_root}")
@@ -366,7 +374,6 @@ def start_http_server():
             continue
     else:
         logger.error("无法启动 HTTP 服务器，所有端口均被占用")
-
 def set_global_icon(app):
     """设置全局图标"""
     icon_path = resource_path("static/icon/shuangmian.ico")

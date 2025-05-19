@@ -43,6 +43,9 @@ def clean_old_logs(log_dir, retention_days):
     """清理超过保留天数的日志文件"""
     now = datetime.datetime.now()
     for filename in os.listdir(log_dir):
+        hz = filename.split('.')[-1]
+        if hz.lower() != 'log':
+            continue
         file_path = os.path.join(log_dir, filename)
         if os.path.isfile(file_path):
             file_time = datetime.datetime.fromtimestamp(os.path.getmtime(file_path))

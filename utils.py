@@ -92,11 +92,7 @@ if not os.path.exists(static_path):
 
 
 def set_http_root():
-    base_path = static_path[:-6]
-
-    if not os.path.isabs(base_path):
-        http_root = os.path.abspath(base_path)
-
+    http_root = os.path.abspath(static_path[:-6])
     return http_root
 
 def resource_path(relative_path,types='file'):

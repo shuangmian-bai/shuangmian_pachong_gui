@@ -9,13 +9,6 @@ from urllib3.exceptions import InsecureRequestWarning
 # 忽略 InsecureRequestWarning 警告
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
-port = None  # 全局变量，用于存储 HTTP 服务器端口号
-
-def set_port(new_port):
-    """设置 HTTP 服务器端口号"""
-    global port
-    port = new_port
-
 def retry_request(url, max_retries=3, backoff_factor=5):
     """尝试请求 URL，直到成功或达到最大重试次数"""
     session = requests.Session()
@@ -90,12 +83,7 @@ if not os.path.exists(static_path):
     # 如果配置文件不存在，则从默认配置文件复制
     shutil.copytree (default_static_path, static_path)
 
-
-def set_http_root():
-    http_root = os.path.abspath(static_path[:-6])
-    return http_root
-
-def resource_path(relative_path,types='file'):
+def resource_path(relative_path, types='file'):
     base_path = static_path[:-6]
     if types == 'file':
         """获取资源文件的绝对路径"""
@@ -106,7 +94,3 @@ def resource_path(relative_path,types='file'):
             absolute_path = os.path.abspath(absolute_path)
 
         return absolute_path
-    elif types == 'path':
-        """获取资源文件对于http服务器的url"""
-        urls = f'http://127.0.0.1:{port}/{relative_path}'
-        return urls

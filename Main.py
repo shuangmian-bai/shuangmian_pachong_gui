@@ -16,10 +16,7 @@ import traceback
 import datetime  # 添加导入 datetime 模块
 from configparser import ConfigParser  # 添加导入 ConfigParser
 import configparser
-from utils import resource_path, set_port, set_http_root  # 更新导入 set_http_root
-import socket  # 添加导入 socket
-from http.server import HTTPServer, SimpleHTTPRequestHandler  # 添加导入 HTTPServer 和 SimpleHTTPRequestHandler
-from threading import Thread  # 添加导入 Thread
+from utils import resource_path  # 移除 set_port, set_http_root
 
 
 # 配置日志记录器，显式指定编码为 utf-8
@@ -183,7 +180,6 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         self.process_check_buttons_thread = None  # 初始化处理复选框按钮的线程
         self.progress_popup = ProgressPopup()  # 创建进度条弹窗实例
         self.progress_popup.rejected.connect(self.on_progress_popup_closed)  # 连接 rejected 信号
-        self.http_server_thread = None  # 初始化 HTTP 服务器线程
 
         # 连接搜索框的 returnPressed 信号到 on_search_clicked 方法
         self.search_input.returnPressed.connect(self.on_search_clicked)
@@ -335,11 +331,6 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         if self.process_check_buttons_thread and self.process_check_buttons_thread.isRunning():
             self.process_check_buttons_thread.stop()
 
-        # 停止 HTTP 服务器线程
-        if self.http_server_thread and self.http_server_thread.is_alive():
-            logger.info("正在关闭 HTTP 服务器线程...")
-            self.http_server_thread.join(timeout=5)
-
         # 关闭日志文件处理器
         for handler in logger.handlers:
             handler.close()
@@ -348,35 +339,6 @@ class CustomMovieCrawlerGUI(MovieCrawlerGUI):
         # 调用父类的 closeEvent 方法
         super().closeEvent(event)
 
-# 全局变量，用于存储 HTTP 服务器端口号
-http_server_port = None
-
-def start_http_server():
-    """启动 HTTP 服务器并随机选择未占用的端口"""
-    global http_server_port
-    http_root = set_http_root()  # 设置 HTTP 服务器根工作目录
-    os.chdir(http_root)
-
-    for port in range(8000, 9000):  # 尝试端口范围
-        try:
-            # 创建服务器实例
-            server = HTTPServer(('127.0.0.1', port), SimpleHTTPRequestHandler)
-
-            # 手动设置 server_name 和 server_port，避免后续访问时触发 getfqdn()
-            server.server_name = 'localhost'
-            server.server_port = port
-
-            http_server_port = port
-            set_port(port)  # 设置全局端口号到 utils.py 的 port 常量
-
-            thread = Thread(target=server.serve_forever, daemon=True)
-            thread.start()
-            logger.info(f"HTTP 服务器已启动，端口号: {port}, 根目录: {http_root}")
-            break
-        except OSError:
-            continue
-    else:
-        logger.error("无法启动 HTTP 服务器，所有端口均被占用")
 def set_global_icon(app):
     """设置全局图标"""
     icon_path = resource_path("static/icon/shuangmian.ico")
@@ -391,9 +353,6 @@ if __name__ == "__main__":
         app = QApplication(sys.argv)
         set_global_icon(app)  # 调用全局图标设置
 
-        # 启动 HTTP 服务器
-        start_http_server()
-
         # 定义按钮数据
         button_data = [
             []
@@ -407,4 +366,3 @@ if __name__ == "__main__":
     except Exception as e:
         logger.error("主程序发生异常", exc_info=True)
         traceback.print_exc()
-

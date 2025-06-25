@@ -352,13 +352,12 @@ class MovieCrawlerGUI(QMainWindow):
                 )
                 self.results[button_text] = video_url  # 更新结果
 
-            # 构造播放 URL
-            jxq = resource_path("static/bfq.html", types='path')
-            play_url = f"{jxq}?m3u8={urllib.parse.quote(video_url, safe='')}"
+            # 使用指定接口播放 m3u8
+            play_url = f"https://m3u8player.org/player.html?url={urllib.parse.quote(video_url, safe='')}"
             logging.info(f"播放地址: {play_url}")
 
-            # 使用 QTimer 延迟打开 URL
-            QTimer.singleShot(3, lambda: QDesktopServices.openUrl(QUrl(play_url)))  # 使用 QUrl 打开 URL
+            # 使用 QDesktopServices 打开 URL
+            QDesktopServices.openUrl(QUrl(play_url))
         else:
             logging.warning(f"未找到对应的视频地址: {button_text}")
 
@@ -398,5 +397,6 @@ class MovieCrawlerGUI(QMainWindow):
             if thread.isRunning():
                 thread.stop()
         super().closeEvent(event)
+
 
 
